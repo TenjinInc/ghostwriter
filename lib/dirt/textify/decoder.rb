@@ -16,6 +16,7 @@ module Dirt
             doc = Nokogiri::HTML(html)
 
             doc.search('style').remove
+            doc.search('script').remove
 
             doc.search('a').each do |link_node|
                link_node.inner_html = link_node.inner_html + ' (' + link_node['href'] + ")\n"

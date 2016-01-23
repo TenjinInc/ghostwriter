@@ -58,6 +58,10 @@ describe Dirt::Textify::Decoder do
          expect(Dirt::Textify::Decoder.new(html).textify).to eq "Some text\n\nmore text\n\n"
       end
 
-      it 'should remove script tags'
+      it 'should remove script tags' do
+         html = "<script>someJsCode()</script>"
+
+         expect(Dirt::Textify::Decoder.new(html).textify).to be_empty
+      end
    end
 end
