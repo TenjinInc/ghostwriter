@@ -6,7 +6,7 @@ Why offer plaintext?
 
  * Spam filters prefer included plain text alternative 
  * Some email clients and apps can’t handle HTML
- * Some people explicitly choose plaintext, either for visual impairment or simple preference
+ * Some people explicitly choose plaintext, either by requirement or simple preference
 
 ## Installation
 
