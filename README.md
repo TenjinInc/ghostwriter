@@ -37,6 +37,7 @@ Dirt::Textify::Decoder.new(html).textify
  
 ```
 
+Textify will use a <base> tag if included in the HTML source, or you can provide one explicitly: 
 
 ```ruby
 html = '<html><body>Relative links <a href="/contact">Link</a></body></html>'
@@ -44,6 +45,32 @@ html = '<html><body>Relative links <a href="/contact">Link</a></body></html>'
 Dirt::Textify::Decoder.new(html).textify(link_base: 'tenjin.ca')
 
 => "Relative links Link (tenjin.ca/contact)"
+
+```
+
+### Mail Gem Example
+
+To use Textify with the [mail](https://github.com/mikel/mail) gem, just provide the text-part by pasisng the html through Textify: 
+
+```ruby
+require 'mail'
+
+html = 'My email and a <a href="http://tenjin.ca">link</a>'
+
+mail = Mail.deliver do
+  to      'bob@example.com'
+  from    'dot@example.com'
+  subject 'Using Textify with mail'
+
+  text_part do
+    body Dirt::Textify::Decoder.new(html).textify
+  end
+
+  html_part do
+    content_type 'text/html; charset=UTF-8'
+    body html
+  end
+end
 
 ```
 
