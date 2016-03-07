@@ -1,19 +1,13 @@
-# Dirt::Textify
+# Ghostwriter
 
-Textify transforms HTML into plaintext while preserving as much legibility and functionality as possible. It's prime use is in quickly producing an automatic plaintext version of HTML emails. 
-
-Why offer plaintext? 
-
- * Spam filters prefer included plain text alternative 
- * Some email clients and apps can’t handle HTML
- * Some people explicitly choose plaintext, either by requirement or simple preference
+Ghostwriter rewrites your emails to conform to varying email client requirements. 
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'dirt-textify'
+gem 'ghostwriter'
 ```
 
 And then execute:
@@ -22,35 +16,46 @@ And then execute:
 
 Or install it manually with:
 
-    $ gem install dirt-textify
+    $ gem install ghostwriter
 
 ## Usage
 
-Just call `Dirt::Textify.textify` and pass in the html you want distilled:
+###Stripping HTML
+
+Transform HTML into plaintext while preserving as much legibility and functionality as possible. 
+It's prime use is in quickly producing an automatic plaintext version of HTML emails. 
+
+Why offer plaintext? 
+
+ * Spam filters prefer included plain text alternative 
+ * Some email clients and apps can’t handle HTML
+ * Some people explicitly choose plaintext, either by requirement or simple preference
+
+Create a `Ghostwriter::Writer` with the html you want modified, and call `#textify`:
 
 ```ruby
 html = '<html><body>This is some markup <a href="tenjin.ca">and a link</a><p>Other tags translate, too</p></body></html>'
 
-Dirt::Textify::Decoder.new(html).textify
+Ghostwriter::Writer.new(html).textify
 
 => "This is some markup and a link (tenjin.ca)\nOther tags translate, too\n\n"
  
 ```
 
-Textify will use a <base> tag if included in the HTML source, or you can provide one explicitly: 
+`#textify` will use a `<base>` tag if included in the HTML source, or if one is provided explicitly: 
 
 ```ruby
 html = '<html><body>Relative links <a href="/contact">Link</a></body></html>'
 
-Dirt::Textify::Decoder.new(html).textify(link_base: 'tenjin.ca')
+Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
 
 => "Relative links Link (tenjin.ca/contact)"
 
 ```
 
-### Mail Gem Example
+#### Mail Gem Example
 
-To use Textify with the [mail](https://github.com/mikel/mail) gem, just provide the text-part by pasisng the html through Textify: 
+To use `#textify` with the [mail](https://github.com/mikel/mail) gem, just provide the text-part by pasisng the html through Ghostwriter: 
 
 ```ruby
 require 'mail'
@@ -60,22 +65,22 @@ html = 'My email and a <a href="http://tenjin.ca">link</a>'
 mail = Mail.deliver do
   to      'bob@example.com'
   from    'dot@example.com'
-  subject 'Using Textify with mail'
-
-  text_part do
-    body Dirt::Textify::Decoder.new(html).textify
-  end
+  subject 'Using Ghostwriter with Mail'
 
   html_part do
-    content_type 'text/html; charset=UTF-8'
-    body html
+      content_type 'text/html; charset=UTF-8'
+      body html
+    end
+  
+  text_part do
+    body Ghostwriter::Writer.new(html).textify
   end
 end
 
 ```
 
 ## Contributing
-Bug reports and pull requests are welcome on GitHub at https://github.com/TenjinInc/dirt-textify.
+Bug reports and pull requests are welcome on GitHub at https://github.com/TenjinInc/ghostwriter
 
 This project is intended to be a friendly space for collaboration, and contributors are expected to adhere to the 
 [Contributor Covenant](contributor-covenant.org) code of conduct.

@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in dirt-textify.gemspec
+# Specify gem dependencies in ghostwriter.gemspec
 gemspec
