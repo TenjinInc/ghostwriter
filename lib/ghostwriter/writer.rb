@@ -40,16 +40,29 @@ module Ghostwriter
       end
 
       def replace_anchors(doc, link_base)
-         # <base> node is unique by W3C spec
-         base     = doc.search('base').first
-         base_url = base ? base['href'] : link_base
+         base = get_link_base(doc, default: link_base)
 
          doc.search('a').each do |link_node|
             href = URI(link_node['href'])
-            href = base_url + href.to_s unless href.absolute?
+            href = base + href.to_s unless href.absolute?
 
-            link_node.inner_html = "#{ link_node.inner_html } (#{ href })"
+            link_node.inner_html = if link_matches(href, link_node.inner_html)
+                                      href.to_s
+                                   else
+                                      "#{ link_node.inner_html } (#{ href })"
+                                   end
          end
+      end
+
+      def link_matches(first, second)
+         first.to_s.gsub(%r{^https?://}, '').chomp('/') == second.gsub(%r{^https?://}, '').chomp('/')
+      end
+
+      def get_link_base(doc, default:)
+         # <base> node is unique by W3C spec
+         base_node = doc.search('base').first
+
+         base_node ? base_node['href'] : default
       end
 
       def replace_headers(doc)

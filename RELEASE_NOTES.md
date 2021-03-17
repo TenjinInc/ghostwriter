@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.4.1 (         )
+## 0.4.1 (2021-03-17)
 
 ### Major
 
@@ -8,7 +8,7 @@
 
 ### Minor
 
-* none
+* No longer provides link target in brackets after link text when they are the same
 
 ### Bugfixes
 

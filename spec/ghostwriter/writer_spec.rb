@@ -42,6 +42,60 @@ describe Ghostwriter::Writer do
 
             expect(Ghostwriter::Writer.new(html).textify).to include 'A link (http://www.example.com/absolute/path)'
          end
+
+         # otherwise we get redundant "www.example.com (www.example.com)"
+         it 'should only provide link target when target matches text' do
+            html = '<a href="www.example.com">www.example.com</a>'
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+         end
+
+         it 'should ignore HTTP when matching target to link text' do
+            html = '<a href="http://www.example.com">www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'http://www.example.com'
+
+            html = '<a href="www.example.com">http://www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+
+            html = '<a href="http://www.example.com">http://www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'http://www.example.com'
+         end
+
+         it 'should ignore HTTPS when matching target to link text' do
+            html = '<a href="https://www.example.com">www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'https://www.example.com'
+
+            html = '<a href="www.example.com">https://www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+
+            html = '<a href="https://www.example.com">https://www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'https://www.example.com'
+         end
+
+         # an alternative behaviour could be to always consider them matching,
+         # and use the most specific, but this will work for now.
+         it 'it should consider other schemes as distinct unless fully matching' do
+            html = '<a href="ftp://www.example.com/">www.example.com/</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/ (ftp://www.example.com/)'
+
+            html = '<a href="www.example.com/">ftp://www.example.com/</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'ftp://www.example.com/ (www.example.com/)'
+
+            html = '<a href="ftp://www.example.com/">ftp://www.example.com/</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'ftp://www.example.com/'
+         end
+
+         it 'should ignore trailing slash when matching target to link text' do
+            # just take the link target as canonical
+            html = '<a href="www.example.com/">www.example.com</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/'
+
+            html = '<a href="www.example.com">www.example.com/</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+
+            html = '<a href="www.example.com/">www.example.com/</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/'
+         end
       end
 
       context 'headers' do
