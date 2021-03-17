@@ -283,6 +283,7 @@ describe Ghostwriter::Writer do
             HTML
          end
       end
+
       context 'tag removal' do
          it 'should remove style tags' do
             html = '<style>a {color: blue;}</style>'
@@ -302,6 +303,34 @@ describe Ghostwriter::Writer do
 
                expect(Ghostwriter::Writer.new(html).textify).to be_empty
             end
+         end
+      end
+
+      context 'entity interpretation' do
+         it 'should interpret whitespace entities' do
+            html = '<html>&nbsp;</html>'
+
+            nbsp = [160].pack('U*')
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq nbsp
+         end
+
+         it 'should interpret symbol entities' do
+            html = '<html>&lt;&gt;&amp;&quot;</html>'
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq '<>&"'
+         end
+
+         it 'should interpret unicode hex entities' do
+            html = "&#x267b;"
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq "\u267b"
+         end
+
+         it 'should interpret unicode decimal entities' do
+            html = "&#9851;"
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq "\u267b"
          end
       end
    end
