@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ghostwriter
    class Writer
       def initialize(html)
@@ -8,7 +10,7 @@ module Ghostwriter
       #
       # Options:
       #   link_base: the url to prefix relative links with
-      def textify(options={})
+      def textify(options = {})
          html = @source_html.dup
 
          html.gsub!(/\n|\t/, ' ')
