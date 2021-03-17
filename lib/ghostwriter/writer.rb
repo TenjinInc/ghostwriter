@@ -6,11 +6,10 @@ module Ghostwriter
          @source_html = html
       end
 
-      # Intelligently strips HTML down to text.
+      # Strips HTML down to text.
       #
-      # Options:
-      #   link_base: the url to prefix relative links with
-      def textify(options = {})
+      # @param link_base the url to prefix relative links with
+      def textify(link_base: '')
          html = @source_html.dup
 
          html.gsub!(/\n|\t/, ' ')
@@ -25,7 +24,7 @@ module Ghostwriter
 
          base = doc.search('base').first #<base> is unique by W3C spec
 
-         base_url = base ? base['href'] : options[:link_base] || ''
+         base_url = base ? base['href'] : link_base
 
          doc.search('a').each do |link_node|
             href = URI(link_node['href'])
