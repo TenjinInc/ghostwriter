@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.4.1 (         )
+
+### Major
+
+* none
+
+### Minor
+
+* none
+
+### Bugfixes
+
+* Added explicit testing for HTML entity interpretation
+
 ## 0.4.0 (2021-03-16)
 
 ### Major

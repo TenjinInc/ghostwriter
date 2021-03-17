@@ -20,7 +20,7 @@ module Ghostwriter
 
          replace_anchors(doc, link_base)
          replace_headers(doc)
-         replace_table(doc)
+         replace_tables(doc)
 
          simple_replace(doc, 'hr', "\n----------\n")
          simple_replace(doc, 'br', "\n")
@@ -58,15 +58,9 @@ module Ghostwriter
          end
       end
 
-      def replace_table(doc)
+      def replace_tables(doc)
          doc.css('table').each do |table|
-            column_sizes = table.search('tr').collect do |row|
-               row.search('th', 'td').collect do |node|
-                  node.inner_html.length
-               end
-            end
-
-            column_sizes = column_sizes.transpose.collect(&:max)
+            column_sizes = calculate_column_sizes(table)
 
             table.search('./thead/tr', './tbody/tr', './tr').each do |row|
                replace_table_nodes(row, column_sizes)
@@ -74,13 +68,27 @@ module Ghostwriter
                row.inner_html = "#{ row.inner_html }|\n"
             end
 
-            table.search('./thead').each do |row|
-               header_bottom = "|#{ column_sizes.collect { |len| ('-' * (len + 2)) }.join('|') }|"
-
-               row.inner_html = "#{ row.inner_html }#{ header_bottom }\n"
-            end
+            add_table_header_underline(table, column_sizes)
 
             table.inner_html = "#{ table.inner_html }\n"
+         end
+      end
+
+      def calculate_column_sizes(table)
+         column_sizes = table.search('tr').collect do |row|
+            row.search('th', 'td').collect do |node|
+               node.inner_html.length
+            end
+         end
+
+         column_sizes.transpose.collect(&:max)
+      end
+
+      def add_table_header_underline(table, column_sizes)
+         table.search('./thead').each do |row|
+            header_bottom = "|#{ column_sizes.collect { |len| ('-' * (len + 2)) }.join('|') }|"
+
+            row.inner_html = "#{ row.inner_html }#{ header_bottom }\n"
          end
       end
 
