@@ -8,7 +8,7 @@
 
 ### Minor
 
-* none
+* Updated docs
 
 ### Bugfixes
 
