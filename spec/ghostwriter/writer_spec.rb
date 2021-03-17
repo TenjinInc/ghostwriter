@@ -96,6 +96,19 @@ describe Ghostwriter::Writer do
             html = '<a href="www.example.com/">www.example.com/</a>'
             expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/'
          end
+
+         it 'should handle mailto scheme' do
+            html = '<a href="mailto: hello@example.com">Email Us</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'Email Us (hello@example.com)'
+         end
+
+         it 'should handle tel scheme' do
+            html = '<a href="tel: +17805550123">Phone Us</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'Phone Us (+17805550123)'
+
+            html = '<a href="tel: +1.780.555.0123">Phone Us</a>'
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'Phone Us (+1.780.555.0123)'
+         end
       end
 
       context 'headers' do

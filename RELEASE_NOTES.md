@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.4.2 (2021-03-17)
+
+### Major
+
+* none
+
+### Minor
+
+* none
+
+### Bugfixes
+
+* Works with links using `tel:` and `mailto:` schemas.
+
 ## 0.4.1 (2021-03-17)
 
 ### Major

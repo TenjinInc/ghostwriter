@@ -43,8 +43,12 @@ module Ghostwriter
          base = get_link_base(doc, default: link_base)
 
          doc.search('a').each do |link_node|
-            href = URI(link_node['href'])
-            href = base + href.to_s unless href.absolute?
+            begin
+               href = URI(link_node['href'])
+               href = base + href.to_s unless href.absolute?
+            rescue URI::InvalidURIError
+               href = link_node['href'].gsub(/^(tel|mailto):/, '').strip
+            end
 
             link_node.inner_html = if link_matches(href, link_node.inner_html)
                                       href.to_s
