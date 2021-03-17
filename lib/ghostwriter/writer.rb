@@ -20,6 +20,7 @@ module Ghostwriter
 
          replace_anchors(doc, link_base)
          replace_headers(doc)
+         replace_table(doc)
 
          simple_replace(doc, 'hr', "\n----------\n")
          simple_replace(doc, 'br', "\n")
@@ -54,6 +55,41 @@ module Ghostwriter
       def replace_headers(doc)
          doc.search('header, h1, h2, h3, h4, h5, h6').each do |node|
             node.inner_html = "- #{ node.inner_html } -\n".squeeze(' ')
+         end
+      end
+
+      def replace_table(doc)
+         doc.css('table').each do |table|
+            column_sizes = table.search('tr').collect do |row|
+               row.search('th', 'td').collect do |node|
+                  node.inner_html.length
+               end
+            end
+
+            column_sizes = column_sizes.transpose.collect(&:max)
+
+            table.search('./thead/tr', './tbody/tr', './tr').each do |row|
+               replace_table_nodes(row, column_sizes)
+
+               row.inner_html = "#{ row.inner_html }|\n"
+            end
+
+            table.search('./thead').each do |row|
+               header_bottom = "|#{ column_sizes.collect { |len| ('-' * (len + 2)) }.join('|') }|"
+
+               row.inner_html = "#{ row.inner_html }#{ header_bottom }\n"
+            end
+
+            table.inner_html = "#{ table.inner_html }\n"
+         end
+      end
+
+      def replace_table_nodes(row, column_sizes)
+         row.search('th', 'td').each_with_index do |node, i|
+            new_content = "| #{ node.inner_html }".squeeze(' ')
+
+            # +2 for the extra spacing between text and pipe
+            node.inner_html = new_content.ljust(column_sizes[i] + 2)
          end
       end
 

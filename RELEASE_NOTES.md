@@ -9,6 +9,7 @@
 ### Minor
 
 * Updated docs
+* Added support for tables
 
 ### Bugfixes
 

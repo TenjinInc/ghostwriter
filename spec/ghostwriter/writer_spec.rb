@@ -88,6 +88,201 @@ describe Ghostwriter::Writer do
          expect(Ghostwriter::Writer.new(html).textify).to eq "Some text\n\nmore text\n\n"
       end
 
+      context 'tables' do
+         it 'should bracket th and td with pipes' do
+            html = <<~HTML
+               <table>
+                  <tbody>
+                     <tr>
+                        <th>Enterprise</th>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                  </tbody>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Enterprise | Jean-Luc Picard |
+
+            HTML
+         end
+
+         it 'should underline header rows' do
+            html = <<~HTML
+               <table>
+                  <thead>
+                     <tr>
+                        <th>Enterprise</th>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                  </thead>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Enterprise | Jean-Luc Picard |
+               |------------|-----------------|
+
+            HTML
+         end
+
+         it 'should assume tbody if not specified' do
+            html = <<~HTML
+               <table>
+                  <tr>
+                     <td>Enterprise</td>
+                     <td>Jean-Luc Picard</td>
+                  </tr>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Enterprise | Jean-Luc Picard |
+
+            HTML
+         end
+
+         it 'should add newline after table' do
+            html = <<~HTML
+               <table>
+                  <tr>
+                     <td>Enterprise</td>
+                     <td>Jean-Luc Picard</td>
+                  </tr>
+               </table>
+               <table>
+                  <tr>
+                     <td>TARDIS</td>
+                     <td>The Doctor</td>
+                  </tr>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Enterprise | Jean-Luc Picard |
+
+               | TARDIS | The Doctor |
+
+            HTML
+         end
+
+         it 'should match column sizes' do
+            html = <<~HTML
+               <table>
+                  <tr>
+                     <td>Enterprise</td>
+                     <td>Jean-Luc Picard</td>
+                  </tr>
+                  <tr>
+                     <td>TARDIS</td>
+                     <td>The Doctor</td>
+                  </tr>
+                  <tr>
+                     <td>Planet Express Ship</td>
+                     <td>Turanga Leela</td>
+                  </tr>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Enterprise          | Jean-Luc Picard |
+               | TARDIS              | The Doctor      |
+               | Planet Express Ship | Turanga Leela   |
+
+            HTML
+         end
+
+         it 'should match column sizes per table' do
+            html = <<~HTML
+               <table>
+                  <thead>
+                     <tr>
+                        <th>Ship</th>
+                        <th>Captain</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td>Enterprise</td>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                     <tr>
+                        <td>TARDIS</td>
+                        <td>The Doctor</td>
+                     </tr>
+                  </tbody>
+               </table>
+
+               <table>
+                  <thead>
+                     <tr>
+                        <th>Ship</th>
+                        <th>Captain</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td>TARDIS</td>
+                        <td>The Doctor</td>
+                     </tr>
+                     <tr>
+                        <td>Planet Express Ship</td>
+                        <td>Turanga Leela</td>
+                     </tr>
+                  </tbody>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Ship       | Captain         |
+               |------------|-----------------|
+               | Enterprise | Jean-Luc Picard |
+               | TARDIS     | The Doctor      |
+
+               | Ship                | Captain       |
+               |---------------------|---------------|
+               | TARDIS              | The Doctor    |
+               | Planet Express Ship | Turanga Leela |
+
+            HTML
+         end
+
+         it 'should parse fully defined tables' do
+            html = <<~HTML
+               <table>
+                  <thead>
+                     <tr>
+                        <th>Ship</th>
+                        <th>Captain</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td>Enterprise</td>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                     <tr>
+                        <td>TARDIS</td>
+                        <td>The Doctor</td>
+                     </tr>
+                     <tr>
+                        <td>Planet Express Ship</td>
+                        <td>Turanga Leela</td>
+                     </tr>
+                  </tbody>
+               </table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               | Ship                | Captain         |
+               |---------------------|-----------------|
+               | Enterprise          | Jean-Luc Picard |
+               | TARDIS              | The Doctor      |
+               | Planet Express Ship | Turanga Leela   |
+
+            HTML
+         end
+      end
       context 'tag removal' do
          it 'should remove style tags' do
             html = '<style>a {color: blue;}</style>'
