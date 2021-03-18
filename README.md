@@ -39,15 +39,54 @@ Ghostwriter::Writer.new(html).textify
 
 ```
 
-`#textify` will use the `<base>` tag if found in the HTML source, or if one is provided explicitly:
+### Links
+
+Links are converted to the link text followed by the link target in brackets:
 
 ```ruby
-html = '<html><body>Relative links <a href="/contact">Link</a></body></html>'
+html = '<html><body>Visit our <a href="https://example.com">Website</a><body></html>'
+Ghostwriter::Writer.new(html).textify
+```
+
+Produces:
+```
+Visit our Website (https://example.com)
+```
+
+#### Relative Links
+Since emails are wholly distinct from your web address, relative links might break.
+
+To avoid this problem, either use the `<base>` header tag:
+
+```ruby
+html = <<~HTML 
+   <html>
+      <head>
+         <base href="https://www.example.com/">
+      </head>
+      <body>
+         Relative links get <a href="/contact">expanded</a> using the head's base tag. 
+      </body>
+   </html>
+HTML
+
+Ghostwriter::Writer.new(html).textify
+```
+Produces:
+```
+Relative links get expanded (https://www.example.com//contact) using the head's base tag.
+```
+
+Or you can use the `link_base` parameter:
+```ruby
+html = '<html><body>Relative links get <a href="/contact">expanded</a></body></html> using the link_base parmeter, too.'
 
 Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
+```
 
-=> "Relative links Link (tenjin.ca/contact)"
-
+Produces: 
+```
+"Relative links get expanded (tenjin.ca/contact) using the link_base parmeter, too."
 ```
 
 ### Mail Gem Example
@@ -58,9 +97,9 @@ through Ghostwriter:
 ```ruby
 require 'mail'
 
-html = 'My email and a <a href="http://tenjin.ca">link</a>'
+html = 'My email and a <a href="https://tenjin.ca">link</a>'
 
-mail = Mail.deliver do
+Mail.deliver do
    to 'bob@example.com'
    from 'dot@example.com'
    subject 'Using Ghostwriter with Mail'
