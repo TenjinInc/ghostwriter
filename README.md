@@ -31,12 +31,15 @@ Or install it manually with:
 Create a `Ghostwriter::Writer` with the html you want modified, and call `#textify`:
 
 ```ruby
-html = '<html><body>This is some markup <a href="tenjin.ca">and a link</a><p>Other tags translate, too</p></body></html>'
+html = '<html><body><p>This is some markup <a href="tenjin.ca">and a link</a></p><p>Other tags translate, too</p></body></html>'
 
 Ghostwriter::Writer.new(html).textify
+```
+Produces:
+```
+This is some markup and a link (tenjin.ca)
 
-=> "This is some markup and a link (tenjin.ca)\nOther tags translate, too\n\n"
-
+Other tags translate, too
 ```
 
 ### Links
@@ -87,6 +90,55 @@ Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
 Produces: 
 ```
 "Relative links get expanded (tenjin.ca/contact) using the link_base parmeter, too."
+```
+
+### Tables
+Tables are often used email structuring because support for more modern CSS is inconsistent.
+
+Ghostwriter tries to maintain table structure, but this will quickly devolve for complex structures.
+
+```ruby
+html = <<~HTML 
+   <html>
+      <head>
+         <base href="https://www.example.com/">
+      </head>
+      <body>
+         <table>
+            <thead>
+                <tr>
+                    <th>Ship</th>
+                    <th>Captain</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Enterprise</td>
+                    <td>Jean-Luc Picard</td>
+                </tr>
+                <tr>
+                    <td>TARDIS</td>
+                    <td>The Doctor</td>
+                </tr>
+                <tr>
+                    <td>Planet Express Ship</td>
+                    <td>Turanga Leela</td>
+                </tr>
+            </tbody>
+         </table> 
+      </body>
+   </html>
+HTML
+
+Ghostwriter::Writer.new(html).textify
+```
+Produces:
+```
+| Ship                | Captain         |
+|---------------------|-----------------|
+| Enterprise          | Jean-Luc Picard |
+| TARDIS              | The Doctor      |
+| Planet Express Ship | Turanga Leela   |
 ```
 
 ### Mail Gem Example
