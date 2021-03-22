@@ -8,7 +8,7 @@
 
 ### Minor
 
-* none
+* Now handles ordered and unordered lists
 
 ### Bugfixes
 

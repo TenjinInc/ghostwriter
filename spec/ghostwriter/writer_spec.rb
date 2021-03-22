@@ -124,7 +124,9 @@ describe Ghostwriter::Writer do
             header_tags.each do |tag|
                html = "<#{tag}>  A header  </#{tag}>"
 
-               expect(Ghostwriter::Writer.new(html).textify).to start_with '- A header -'
+               expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+                  -- A header --
+               TEXT
             end
          end
       end
@@ -153,6 +155,40 @@ describe Ghostwriter::Writer do
          html = "<div>  \n  <p>Some text</p><p>  \n  more text  \n  </p>  </div>"
 
          expect(Ghostwriter::Writer.new(html).textify).to eq "Some text\n\nmore text\n\n"
+      end
+
+      context 'list' do
+         it 'should preface unordered list items with a bullet' do
+            html = <<~HTML
+               <ul>
+                  <li>Planes</li>
+                  <li>Trains</li>
+                  <li>Automobiles</li>
+               </ul>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+               - Planes
+               - Trains
+               - Automobiles
+            TEXT
+         end
+
+         it 'should preface ordered list items with a number' do
+            html = <<~HTML
+               <ol>
+                  <li>I get knocked down</li>
+                  <li>I get up again</li>
+                  <li>Never gonna keep me down</li>
+               </ol>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+               1. I get knocked down
+               2. I get up again
+               3. Never gonna keep me down
+            TEXT
+         end
       end
 
       context 'tables' do

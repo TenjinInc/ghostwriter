@@ -22,6 +22,7 @@ module Ghostwriter
 
          replace_anchors(doc, link_base)
          replace_headers(doc)
+         replace_lists(doc)
          replace_tables(doc)
 
          simple_replace(doc, 'hr', "\n----------\n")
@@ -73,7 +74,19 @@ module Ghostwriter
 
       def replace_headers(doc)
          doc.search('header, h1, h2, h3, h4, h5, h6').each do |node|
-            node.inner_html = "- #{ node.inner_html } -\n".squeeze(' ')
+            node.inner_html = "-- #{ node.inner_html } --\n".squeeze(' ')
+         end
+      end
+
+      def replace_lists(doc)
+         doc.search('ul li').each do |node|
+            node.inner_html = "- #{ node.inner_html }\n".squeeze(' ')
+         end
+
+         doc.search('ol').each do |list_node|
+            list_node.search('./li').each_with_index do |list_item, i|
+               list_item.inner_html = "#{ i + 1 }. #{ list_item.inner_html }\n".squeeze(' ')
+            end
          end
       end
 
