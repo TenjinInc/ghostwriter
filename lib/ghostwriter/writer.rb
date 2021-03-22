@@ -91,9 +91,12 @@ module Ghostwriter
          doc.search('img[role=presentation]').remove
 
          doc.search('img').each do |img_node|
+            src = img_node['src']
             alt = img_node['alt']
 
-            img_node.replace("#{ alt } (#{ img_node['src'] })") unless alt.nil? || alt.empty?
+            src = 'embedded' if src.start_with? 'data:'
+
+            img_node.replace("#{ alt } (#{ src })") unless alt.nil? || alt.empty?
          end
       end
 
