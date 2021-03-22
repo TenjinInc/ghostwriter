@@ -11,103 +11,103 @@ describe Ghostwriter::Writer do
       it 'should replace hr with a line of dashes' do
          html = '<hr>'
 
-         expect(Ghostwriter::Writer.new(html).textify).to eq "\n----------\n"
+         expect(Ghostwriter::Writer.new.textify(html)).to eq "\n----------\n"
       end
 
       context 'links' do
          it 'should make links visible within brackets' do
             html = '<a href="www.example.com">A link</a>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to include 'A link (www.example.com)'
+            expect(Ghostwriter::Writer.new.textify(html)).to include 'A link (www.example.com)'
          end
 
          it 'should make links absolute addresses using base tag' do
             html = '<head><base href="www.example.com" /></head><body><a href="/relative/path">A link</a></body>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to include 'A link (www.example.com/relative/path)'
+            expect(Ghostwriter::Writer.new.textify(html)).to include 'A link (www.example.com/relative/path)'
          end
 
          it 'should make links absolute addresses using given base' do
             html = '<a href="/relative/path">A link</a>'
 
-            expect(Ghostwriter::Writer.new(html).textify(link_base: 'www.example.com')).to include 'A link (www.example.com/relative/path)'
+            expect(Ghostwriter::Writer.new(link_base: 'www.example.com').textify(html)).to include 'A link (www.example.com/relative/path)'
          end
 
          it 'should not change absolute addresses when given base' do
             html = '<a href="http://www.example.com/absolute/path">A link</a>'
 
-            expect(Ghostwriter::Writer.new(html).textify(link_base: 'www.example2.com')).to include 'A link (http://www.example.com/absolute/path)'
+            expect(Ghostwriter::Writer.new(link_base: 'www.example2.com').textify(html)).to include 'A link (http://www.example.com/absolute/path)'
 
             html = '<head><base href="www.example2.com" /></head><body><a href="http://www.example.com/absolute/path">A link</a></body>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to include 'A link (http://www.example.com/absolute/path)'
+            expect(Ghostwriter::Writer.new.textify(html)).to include 'A link (http://www.example.com/absolute/path)'
          end
 
          # otherwise we get redundant "www.example.com (www.example.com)"
          it 'should only provide link target when target matches text' do
             html = '<a href="www.example.com">www.example.com</a>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
          end
 
          it 'should ignore HTTP when matching target to link text' do
             html = '<a href="http://www.example.com">www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'http://www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'http://www.example.com'
 
             html = '<a href="www.example.com">http://www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
 
             html = '<a href="http://www.example.com">http://www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'http://www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'http://www.example.com'
          end
 
          it 'should ignore HTTPS when matching target to link text' do
             html = '<a href="https://www.example.com">www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'https://www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'https://www.example.com'
 
             html = '<a href="www.example.com">https://www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
 
             html = '<a href="https://www.example.com">https://www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'https://www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'https://www.example.com'
          end
 
          # an alternative behaviour could be to always consider them matching,
          # and use the most specific, but this will work for now.
          it 'it should consider other schemes as distinct unless fully matching' do
             html = '<a href="ftp://www.example.com/">www.example.com/</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/ (ftp://www.example.com/)'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com/ (ftp://www.example.com/)'
 
             html = '<a href="www.example.com/">ftp://www.example.com/</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'ftp://www.example.com/ (www.example.com/)'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'ftp://www.example.com/ (www.example.com/)'
 
             html = '<a href="ftp://www.example.com/">ftp://www.example.com/</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'ftp://www.example.com/'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'ftp://www.example.com/'
          end
 
          it 'should ignore trailing slash when matching target to link text' do
             # just take the link target as canonical
             html = '<a href="www.example.com/">www.example.com</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com/'
 
             html = '<a href="www.example.com">www.example.com/</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
 
             html = '<a href="www.example.com/">www.example.com/</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'www.example.com/'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com/'
          end
 
          it 'should handle mailto scheme' do
             html = '<a href="mailto: hello@example.com">Email Us</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'Email Us (hello@example.com)'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Email Us (hello@example.com)'
          end
 
          it 'should handle tel scheme' do
             html = '<a href="tel: +17805550123">Phone Us</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'Phone Us (+17805550123)'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Phone Us (+17805550123)'
 
             html = '<a href="tel: +1.780.555.0123">Phone Us</a>'
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'Phone Us (+1.780.555.0123)'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Phone Us (+1.780.555.0123)'
          end
       end
 
@@ -116,7 +116,7 @@ describe Ghostwriter::Writer do
             header_tags.each do |tag|
                html = "<#{tag}>A header</#{tag}>"
 
-               expect(Ghostwriter::Writer.new(html).textify).to end_with "\n"
+               expect(Ghostwriter::Writer.new.textify(html)).to end_with "\n"
             end
          end
 
@@ -124,7 +124,7 @@ describe Ghostwriter::Writer do
             header_tags.each do |tag|
                html = "<#{tag}>  A header  </#{tag}>"
 
-               expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+               expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                   -- A header --
                TEXT
             end
@@ -134,25 +134,25 @@ describe Ghostwriter::Writer do
       it 'should compress whitespace to one space' do
          html = "\n\nThis   is\treally\nspaced\ttext"
 
-         expect(Ghostwriter::Writer.new(html).textify).to eq 'This is really spaced text'
+         expect(Ghostwriter::Writer.new.textify(html)).to eq 'This is really spaced text'
       end
 
       it 'should replace all <br> tags with newlines' do
          html = 'Line one<br>Line two'
 
-         expect(Ghostwriter::Writer.new(html).textify).to eq "Line one\nLine two"
+         expect(Ghostwriter::Writer.new.textify(html)).to eq "Line one\nLine two"
       end
 
       it 'should replace paragraph end tags with double newlines' do
          html = '<p>I am a paragraph</p>'
 
-         expect(Ghostwriter::Writer.new(html).textify).to eq "I am a paragraph\n\n"
+         expect(Ghostwriter::Writer.new.textify(html)).to eq "I am a paragraph\n\n"
       end
 
       it 'should strip each line after processing' do
          html = "<div>  \n  <p>Some text</p><p>  \n  more text  \n  </p>  </div>"
 
-         expect(Ghostwriter::Writer.new(html).textify).to eq "Some text\n\nmore text\n\n"
+         expect(Ghostwriter::Writer.new.textify(html)).to eq "Some text\n\nmore text\n\n"
       end
 
       context 'image' do
@@ -161,7 +161,7 @@ describe Ghostwriter::Writer do
                <img src="acme-logo.jpg" alt="ACME Anvils" />
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq 'ACME Anvils (acme-logo.jpg)'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq 'ACME Anvils (acme-logo.jpg)'
          end
 
          it 'should skip images without alt text' do
@@ -169,7 +169,7 @@ describe Ghostwriter::Writer do
                <img src="flair.jpg" />
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to be_empty
+            expect(Ghostwriter::Writer.new.textify(html)).to be_empty
          end
 
          it 'should skip images with presentation role' do
@@ -178,7 +178,7 @@ describe Ghostwriter::Writer do
                <img src="flair.jpg" alt="flair image" role="presentation" />
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to be_empty
+            expect(Ghostwriter::Writer.new.textify(html)).to be_empty
          end
       end
 
@@ -187,7 +187,7 @@ describe Ghostwriter::Writer do
             %w[ul ol].each do |tag|
                html = "<#{ tag }></#{ tag }>"
 
-               expect(Ghostwriter::Writer.new(html).textify).to eq "\n\n"
+               expect(Ghostwriter::Writer.new.textify(html)).to eq "\n\n"
             end
          end
 
@@ -200,7 +200,7 @@ describe Ghostwriter::Writer do
                </ul>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
 
                - Planes
                - Trains
@@ -218,7 +218,7 @@ describe Ghostwriter::Writer do
                </ol>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
 
                1. I get knocked down
                2. I get up again
@@ -241,7 +241,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
             TEXT
@@ -259,7 +259,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
                |------------|-----------------|
 
@@ -276,7 +276,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
             TEXT
@@ -298,7 +298,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
                | TARDIS | The Doctor |
@@ -324,7 +324,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Enterprise          | Jean-Luc Picard |
                | TARDIS              | The Doctor      |
                | Planet Express Ship | Turanga Leela   |
@@ -373,7 +373,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Ship       | Captain         |
                |------------|-----------------|
                | Enterprise | Jean-Luc Picard |
@@ -413,7 +413,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                | Ship                | Captain         |
                |---------------------|-----------------|
                | Enterprise          | Jean-Luc Picard |
@@ -428,20 +428,20 @@ describe Ghostwriter::Writer do
          it 'should remove style tags' do
             html = '<style>a {color: blue;}</style>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq ''
+            expect(Ghostwriter::Writer.new.textify(html)).to eq ''
          end
 
          it 'should remove script tags' do
             html = '<script>someJsCode()</script>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to be_empty
+            expect(Ghostwriter::Writer.new.textify(html)).to be_empty
          end
 
          it 'should remove all other html elements' do
             %w{div strong b i}.each do |tag|
                html = "<#{ tag }></#{ tag }>"
 
-               expect(Ghostwriter::Writer.new(html).textify).to be_empty
+               expect(Ghostwriter::Writer.new.textify(html)).to be_empty
             end
          end
       end
@@ -453,7 +453,7 @@ describe Ghostwriter::Writer do
                <table role=presentation><tr><td>No quotes</td></tr></table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                With quotes
                No quotes
             TEXT
@@ -468,7 +468,7 @@ describe Ghostwriter::Writer do
                <ul role=presentation><li>Unordered without quotes</li></ul>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
                Ordered with quotes
                Ordered without quotes
                Unordered with quotes
@@ -483,25 +483,25 @@ describe Ghostwriter::Writer do
 
             nbsp = [160].pack('U*')
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq nbsp
+            expect(Ghostwriter::Writer.new.textify(html)).to eq nbsp
          end
 
          it 'should interpret symbol entities' do
             html = '<html>&lt;&gt;&amp;&quot;</html>'
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq '<>&"'
+            expect(Ghostwriter::Writer.new.textify(html)).to eq '<>&"'
          end
 
          it 'should interpret unicode hex entities' do
             html = "&#x267b;"
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq "\u267b"
+            expect(Ghostwriter::Writer.new.textify(html)).to eq "\u267b"
          end
 
          it 'should interpret unicode decimal entities' do
             html = "&#9851;"
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq "\u267b"
+            expect(Ghostwriter::Writer.new.textify(html)).to eq "\u267b"
          end
       end
    end

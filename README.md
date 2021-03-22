@@ -29,12 +29,12 @@ Or install it manually with:
 
 ## Usage
 
-Create a `Ghostwriter::Writer` with the html you want modified, and call `#textify`:
+Create a `Ghostwriter::Writer` and call `#textify` with the html you want modified:
 
 ```ruby
 html = '<html><body><p>This is some markup <a href="tenjin.ca">and a link</a></p><p>Other tags translate, too</p></body></html>'
 
-Ghostwriter::Writer.new(html).textify
+Ghostwriter::Writer.new.textify(html)
 ```
 
 Produces:
@@ -88,10 +88,10 @@ Becomes:
 Use the base tag to expand (https://www.example.com/contact) links
 ```
 
-Or you can use the `link_base` parameter:
+Or you can use the `link_base` configuration:
 
 ```ruby
-Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
+Ghostwriter::Writer.new(link_base: 'tenjin.ca').textify(html)
 ```
 
 ### Images
@@ -150,8 +150,8 @@ Becomes:
 
 ### Tables
 
-Tables are still often used in email structuring because support for more modern HTML and CSS is inconsistent.
-If your table is purely presentational, mark it with `role="presentation"`. See below for details.
+Tables are still often used in email structuring because support for more modern HTML and CSS is inconsistent. If your
+table is purely presentational, mark it with `role="presentation"`. See below for details.
 
 For real data tables, Ghostwriter tries to maintain table structure for simple tables:
 
@@ -192,12 +192,20 @@ Becomes:
 ```
 
 ### Presentation ARIA Role
-Lists and tables with `role="presentation"` will be treated as a simple container 
-and the normal behaviour will be suppressed.
+
+Lists and tables with `role="presentation"` will be treated as a simple container and the normal behaviour will be
+suppressed.
 
 ```html
-<table role="presentation"><tr><td>The table is a lie</td></tr></table>
-<ul role="presentation"><li>No such list</li></ul>
+
+<table role="presentation">
+   <tr>
+      <td>The table is a lie</td>
+   </tr>
+</table>
+<ul role="presentation">
+   <li>No such list</li>
+</ul>
 ```
 
 Becomes:
@@ -215,7 +223,8 @@ through Ghostwriter:
 ```ruby
 require 'mail'
 
-html = 'My email and a <a href="https://tenjin.ca">link</a>'
+html        = 'My email and a <a href="https://tenjin.ca">link</a>'
+ghostwriter = Ghostwriter::Writer.new
 
 Mail.deliver do
    to 'bob@example.com'
@@ -228,7 +237,7 @@ Mail.deliver do
    end
 
    text_part do
-      body Ghostwriter::Writer.new(html).textify
+      body ghostwriter.textify(html)
    end
 end
 

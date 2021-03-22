@@ -1,13 +1,15 @@
 # Release Notes
 
-## 0.5.0 (     )
+## 1.0.0 (     )
 
 ### Major
 
-* Treats tables and lists with role="presentation" as simple containers
+* Moved `link_base` parameter to constructor
+* Moved input HTML parameter to `#textify`
 
 ### Minor
 
+* Treats tables and lists with role="presentation" as simple containers
 * Now handles ordered and unordered lists
 * Images are now replaced with their alt text
 

@@ -3,22 +3,23 @@
 module Ghostwriter
    # Main Ghostwriter converter object.
    class Writer
-      def initialize(html)
-         @source_html = html
+      # @param [String] link_base the url to prefix relative links with
+      def initialize(link_base: '')
+         @link_base = link_base
       end
 
       # Strips HTML down to plain text.
       #
-      # @param link_base the url to prefix relative links with
-      def textify(link_base: '')
-         html = normalize_whitespace(@source_html).gsub('</p>', "</p>\n\n")
-
-         doc = Nokogiri::HTML(html)
+      # @param html [String] the HTML to be convert to text
+      #
+      # @return converted text
+      def textify(html)
+         doc = Nokogiri::HTML(normalize_whitespace(html).gsub('</p>', "</p>\n\n"))
 
          doc.search('style').remove
          doc.search('script').remove
 
-         replace_anchors(doc, link_base)
+         replace_anchors(doc)
          replace_images(doc)
 
          simple_replace(doc, '*[role="presentation"]', "\n")
@@ -44,13 +45,11 @@ module Ghostwriter
          html.gsub(/\s/, ' ').squeeze(' ')
       end
 
-      def replace_anchors(doc, link_base)
-         base = get_link_base(doc, default: link_base)
-
+      def replace_anchors(doc)
          doc.search('a').each do |link_node|
             begin
                href = URI(link_node['href'])
-               href = base + href.to_s unless href.absolute?
+               href = get_link_base(doc) + href.to_s unless href.absolute?
             rescue URI::InvalidURIError
                href = link_node['href'].gsub(/^(tel|mailto):/, '').strip
             end
@@ -67,11 +66,11 @@ module Ghostwriter
          first.to_s.gsub(%r{^https?://}, '').chomp('/') == second.gsub(%r{^https?://}, '').chomp('/')
       end
 
-      def get_link_base(doc, default:)
+      def get_link_base(doc)
          # <base> node is unique by W3C spec
          base_node = doc.search('base').first
 
-         base_node ? base_node['href'] : default
+         base_node ? base_node['href'] : @link_base
       end
 
       def replace_headers(doc)
