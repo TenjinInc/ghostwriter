@@ -3,9 +3,12 @@
 module Ghostwriter
    # Main Ghostwriter converter object.
    class Writer
+      # Creates a new ghostwriter
+      #
       # @param [String] link_base the url to prefix relative links with
       def initialize(link_base: '')
-         @link_base = link_base
+         @link_base   = link_base
+         @list_marker = '-'
       end
 
       # Strips HTML down to plain text.
@@ -16,8 +19,7 @@ module Ghostwriter
       def textify(html)
          doc = Nokogiri::HTML(normalize_whitespace(html).gsub('</p>', "</p>\n\n"))
 
-         doc.search('style').remove
-         doc.search('script').remove
+         doc.search('style, script').remove
 
          replace_anchors(doc)
          replace_images(doc)
@@ -47,12 +49,7 @@ module Ghostwriter
 
       def replace_anchors(doc)
          doc.search('a').each do |link_node|
-            begin
-               href = URI(link_node['href'])
-               href = get_link_base(doc) + href.to_s unless href.absolute?
-            rescue URI::InvalidURIError
-               href = link_node['href'].gsub(/^(tel|mailto):/, '').strip
-            end
+            href = get_link_target(link_node, get_link_base(doc))
 
             link_node.inner_html = if link_matches(href, link_node.inner_html)
                                       href.to_s
@@ -73,6 +70,17 @@ module Ghostwriter
          base_node ? base_node['href'] : @link_base
       end
 
+      def get_link_target(link_node, base)
+         href = URI(link_node['href'])
+         if href.absolute?
+            href
+         else
+            base + href.to_s
+         end
+      rescue URI::InvalidURIError
+         link_node['href'].gsub(/^(tel|mailto):/, '').strip
+      end
+
       def replace_headers(doc)
          doc.search('header, h1, h2, h3, h4, h5, h6').each do |node|
             node.inner_html = "-- #{ node.inner_html } --\n".squeeze(' ')
@@ -90,18 +98,18 @@ module Ghostwriter
       end
 
       def replace_lists(doc)
-         doc.search('ul li').each do |node|
-            node.inner_html = "- #{ node.inner_html }\n".squeeze(' ')
-         end
-
-         doc.search('ol').each do |list_node|
+         doc.search('ul, ol').each do |list_node|
             list_node.search('./li').each_with_index do |list_item, i|
-               list_item.inner_html = "#{ i + 1 }. #{ list_item.inner_html }\n".squeeze(' ')
-            end
-         end
+               marker = if list_node.node_name == 'ol'
+                           "#{ i + 1 }."
+                        else
+                           @list_marker
+                        end
 
-         doc.search('ol, ul').each do |node|
-            node.replace("\n#{ node.inner_html }\n")
+               list_item.inner_html = "#{ marker } #{ list_item.inner_html }\n".squeeze(' ')
+            end
+
+            list_node.replace("\n#{ list_node.inner_html }\n")
          end
       end
 
