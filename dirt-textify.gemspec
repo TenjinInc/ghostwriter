@@ -10,9 +10,11 @@ Gem::Specification.new do |spec|
    spec.authors = ['Robin Miller']
    spec.email   = ['robin@tenjin.ca']
 
-   spec.summary     = 'Intelligently extracts plaintext from an HTML document.'
+   spec.summary     = 'Converts HTML to plain text'
    spec.description = <<~DESC
-      Transforms HTML into plaintext while preserving legibility and functionality.
+      Converts HTML to plain text, preserving as much legibility and functionality as possible.
+
+      Ideal for providing a plaintext multipart segment of email messages.
    DESC
    spec.homepage = 'https://github.com/TenjinInc/ghostwriter'
    spec.license  = 'MIT'

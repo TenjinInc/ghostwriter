@@ -1,6 +1,6 @@
 # Ghostwriter
 
-Ghostwriter rewrites HTML as plain text while preserving as much legibility and functionality as possible.
+A ruby gem that converts HTML to plain text, preserving as much legibility and functionality as possible.
 
 It's sort of like a reverse-markdown or a very, very simple screen reader.
 
@@ -8,7 +8,7 @@ It's sort of like a reverse-markdown or a very, very simple screen reader.
 
 * Some email clients won't or can’t handle HTML at all
 * Some people explicitly choose plaintext just by preference or accessibility
-* Spam filters tend to like emails with a plain text alternative (but if you use this gem to help you spam people, I
+* Spam filters tend to prefer emails with a plain text alternative (but if you use this gem to spam people, I
   will yell at you)
 
 ## Installation
@@ -29,7 +29,7 @@ Or install it manually with:
 
 ## Usage
 
-Create a `Ghostwriter::Writer` and call `#textify` with the html you want modified:
+Create a `Ghostwriter::Writer` and call `#textify` with the html string you want modified:
 
 ```ruby
 html = '<html><body><p>This is some markup <a href="tenjin.ca">and a link</a></p><p>Other tags translate, too</p></body></html>'
