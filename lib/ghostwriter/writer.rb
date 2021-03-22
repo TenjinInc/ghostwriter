@@ -88,6 +88,10 @@ module Ghostwriter
                list_item.inner_html = "#{ i + 1 }. #{ list_item.inner_html }\n".squeeze(' ')
             end
          end
+
+         doc.search('ol, ul').each do |node|
+            node.replace("\n#{ node.inner_html }\n")
+         end
       end
 
       def replace_tables(doc)

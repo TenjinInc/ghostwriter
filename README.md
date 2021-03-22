@@ -35,7 +35,9 @@ html = '<html><body><p>This is some markup <a href="tenjin.ca">and a link</a></p
 
 Ghostwriter::Writer.new(html).textify
 ```
+
 Produces:
+
 ```
 This is some markup and a link (tenjin.ca)
 
@@ -52,17 +54,19 @@ Ghostwriter::Writer.new(html).textify
 ```
 
 Produces:
+
 ```
 Visit our Website (https://example.com)
 ```
 
 #### Relative Links
+
 Since emails are wholly distinct from your web address, relative links might break.
 
 To avoid this problem, either use the `<base>` header tag:
 
 ```ruby
-html = <<~HTML 
+html = <<~HTML
    <html>
       <head>
          <base href="https://www.example.com/">
@@ -75,30 +79,70 @@ HTML
 
 Ghostwriter::Writer.new(html).textify
 ```
+
 Produces:
+
 ```
 Relative links get expanded (https://www.example.com//contact) using the head's base tag.
 ```
 
 Or you can use the `link_base` parameter:
+
 ```ruby
 html = '<html><body>Relative links get <a href="/contact">expanded</a></body></html> using the link_base parmeter, too.'
 
 Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
 ```
 
-Produces: 
+Produces:
+
 ```
 "Relative links get expanded (tenjin.ca/contact) using the link_base parmeter, too."
 ```
 
+### Lists
+
+Lists are converted, too. They get padded with newlines and are given simple markers:
+
+```ruby
+html = <<~HTML
+    <ul>
+        <li>Planes</li>
+        <li>Trains</li>
+        <li>Automobiles</li>
+    </ul>
+    <ol>
+        <li>I get knocked down</li>
+        <li>I get up again</li>
+        <li>Never gonna keep me down</li>
+    </ol>
+HTML
+
+Ghostwriter::Writer.new(html).textify
+```
+
+Produces:
+
+```
+
+- Planes
+- Trains
+- Automobiles
+
+1. I get knocked down
+2. I get up again
+3. Never gonna keep me down
+
+```
+
 ### Tables
+
 Tables are often used email structuring because support for more modern CSS is inconsistent.
 
 Ghostwriter tries to maintain table structure, but this will quickly devolve for complex structures.
 
 ```ruby
-html = <<~HTML 
+html = <<~HTML
    <html>
       <head>
          <base href="https://www.example.com/">
@@ -132,7 +176,9 @@ HTML
 
 Ghostwriter::Writer.new(html).textify
 ```
+
 Produces:
+
 ```
 | Ship                | Captain         |
 |---------------------|-----------------|
@@ -181,19 +227,19 @@ After checking out the repo, run `bundle install` to install dependencies. Then,
 can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 #### Local Install
-To install this gem onto your local machine only, run 
 
-`bundle exec rake install` 
+To install this gem onto your local machine only, run
+
+`bundle exec rake install`
 
 #### Gem Release
+
 To release a gem to the world at large
 
- 1. Update the version number in `version.rb`,
- 2. Run `bundle exec rake release`, 
-    which will create a git tag for the version,
-    push git commits and tags, 
-    and push the `.gem` file to [rubygems.org](https://rubygems.org).
- 3. Do a wee dance 
+1. Update the version number in `version.rb`,
+2. Run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push
+   the `.gem` file to [rubygems.org](https://rubygems.org).
+3. Do a wee dance
 
 ## License
 

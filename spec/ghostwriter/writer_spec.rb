@@ -158,6 +158,14 @@ describe Ghostwriter::Writer do
       end
 
       context 'list' do
+         it 'should buffer lists with newlines' do
+            %w[ul ol].each do |tag|
+               html = "<#{ tag }></#{ tag }>"
+
+               expect(Ghostwriter::Writer.new(html).textify).to eq "\n\n"
+            end
+         end
+
          it 'should preface unordered list items with a bullet' do
             html = <<~HTML
                <ul>
@@ -168,9 +176,11 @@ describe Ghostwriter::Writer do
             HTML
 
             expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+
                - Planes
                - Trains
                - Automobiles
+
             TEXT
          end
 
@@ -184,9 +194,11 @@ describe Ghostwriter::Writer do
             HTML
 
             expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
+
                1. I get knocked down
                2. I get up again
                3. Never gonna keep me down
+
             TEXT
          end
       end
