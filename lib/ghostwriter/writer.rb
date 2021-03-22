@@ -18,9 +18,11 @@ module Ghostwriter
          doc.search('style').remove
          doc.search('script').remove
 
+         replace_anchors(doc, link_base)
+         replace_images(doc)
+
          simple_replace(doc, '*[role="presentation"]', "\n")
 
-         replace_anchors(doc, link_base)
          replace_headers(doc)
          replace_lists(doc)
          replace_tables(doc)
@@ -75,6 +77,16 @@ module Ghostwriter
       def replace_headers(doc)
          doc.search('header, h1, h2, h3, h4, h5, h6').each do |node|
             node.inner_html = "-- #{ node.inner_html } --\n".squeeze(' ')
+         end
+      end
+
+      def replace_images(doc)
+         doc.search('img[role=presentation]').remove
+
+         doc.search('img').each do |img_node|
+            alt = img_node['alt']
+
+            img_node.replace("#{ alt } (#{ img_node['src'] })") unless alt.nil? || alt.empty?
          end
       end
 

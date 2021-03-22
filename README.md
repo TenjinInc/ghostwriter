@@ -100,6 +100,33 @@ Produces:
 "Relative links get expanded (tenjin.ca/contact) using the link_base parmeter, too."
 ```
 
+### Images
+Images with alt text are converted:
+```ruby
+html = <<~HTML
+   <img src="logo.jpg" alt="ACME Anvils">
+HTML
+
+Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
+```
+
+Produces:
+
+```
+ACME Anvils (logo.jpg)
+```
+
+But images lacking alt text or with a presentation ARIA role are ignored:
+```ruby
+html = <<~HTML
+   <img src="decoration.jpg">
+   <img src="logo.jpg" role="presentation">
+HTML
+
+# this will produce an empty string
+Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
+```
+
 ### Lists
 
 Lists are converted, too. They get padded with newlines and are given simple markers:

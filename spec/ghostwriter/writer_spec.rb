@@ -155,6 +155,33 @@ describe Ghostwriter::Writer do
          expect(Ghostwriter::Writer.new(html).textify).to eq "Some text\n\nmore text\n\n"
       end
 
+      context 'image' do
+         it 'should replace images with alt text' do
+            html = <<~HTML
+               <img src="acme-logo.jpg" alt="ACME Anvils" />
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq 'ACME Anvils (acme-logo.jpg)'
+         end
+
+         it 'should skip images without alt text' do
+            html = <<~HTML
+               <img src="flair.jpg" />
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to be_empty
+         end
+
+         it 'should skip images with presentation role' do
+            html = <<~HTML
+               <img src="flair.jpg" alt="flair image" role=presentation />
+               <img src="flair.jpg" alt="flair image" role="presentation" />
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to be_empty
+         end
+      end
+
       context 'list' do
          it 'should buffer lists with newlines' do
             %w[ul ol].each do |tag|

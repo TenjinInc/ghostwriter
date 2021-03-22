@@ -9,6 +9,7 @@
 ### Minor
 
 * Now handles ordered and unordered lists
+* Images are now replaced with their alt text
 
 ### Bugfixes
 
