@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.5.0 (     )
+
+### Major
+
+* Treats tables and lists with role="presentation" as simple containers
+
+### Minor
+
+* none
+
+### Bugfixes
+
+* none
+
 ## 0.4.2 (2021-03-17)
 
 ### Major

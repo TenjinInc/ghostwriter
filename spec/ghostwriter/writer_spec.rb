@@ -366,10 +366,41 @@ describe Ghostwriter::Writer do
 
          it 'should remove all other html elements' do
             %w{div strong b i}.each do |tag|
-               html = "<#{tag}></#{tag}>"
+               html = "<#{ tag }></#{ tag }>"
 
                expect(Ghostwriter::Writer.new(html).textify).to be_empty
             end
+         end
+      end
+
+      context 'aria presentation role' do
+         it 'should treat cells in table with presentation role as paragraphs' do
+            html = <<~HTML
+               <table role="presentation"><tr><td>With quotes</td></tr></table>
+               <table role=presentation><tr><td>No quotes</td></tr></table>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               With quotes
+               No quotes
+            HTML
+         end
+
+         it 'should treat list with presentation role as paragraphs' do
+            html = <<~HTML
+               <ol role="presentation"><li>Ordered with quotes</li></ol>
+               <ol role=presentation><li>Ordered without quotes</li></ol>
+
+               <ul role="presentation"><li>Unordered with quotes</li></ul>
+               <ul role=presentation><li>Unordered without quotes</li></ul>
+            HTML
+
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+               Ordered with quotes
+               Ordered without quotes
+               Unordered with quotes
+               Unordered without quotes
+            HTML
          end
       end
 

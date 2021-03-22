@@ -18,6 +18,8 @@ module Ghostwriter
          doc.search('style').remove
          doc.search('script').remove
 
+         simple_replace(doc, '*[role="presentation"]', "\n")
+
          replace_anchors(doc, link_base)
          replace_headers(doc)
          replace_tables(doc)
@@ -120,7 +122,7 @@ module Ghostwriter
 
       def simple_replace(doc, tag, replacement)
          doc.search(tag).each do |node|
-            node.replace(replacement)
+            node.replace(node.inner_html + replacement)
          end
       end
    end
