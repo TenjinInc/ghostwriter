@@ -2,13 +2,14 @@
 
 Ghostwriter rewrites HTML as plain text while preserving as much legibility and functionality as possible.
 
-It's sort of like a reverse-markdown.
+It's sort of like a reverse-markdown or a very, very simple screen reader.
 
 ## But Why, Though?
 
-* Spam filters tend to like emails with a plain text alternative
 * Some email clients won't or can’t handle HTML at all
 * Some people explicitly choose plaintext just by preference or accessibility
+* Spam filters tend to like emails with a plain text alternative (but if you use this gem to help you spam people, I
+  will yell at you)
 
 ## Installation
 
@@ -48,12 +49,16 @@ Other tags translate, too
 
 Links are converted to the link text followed by the link target in brackets:
 
-```ruby
-html = '<html><body>Visit our <a href="https://example.com">Website</a><body></html>'
-Ghostwriter::Writer.new(html).textify
+```html
+
+<html>
+<body>
+Visit our <a href="https://example.com">Website</a>
+<body>
+</html>
 ```
 
-Produces:
+Becomes:
 
 ```
 Visit our Website (https://example.com)
@@ -65,90 +70,71 @@ Since emails are wholly distinct from your web address, relative links might bre
 
 To avoid this problem, either use the `<base>` header tag:
 
-```ruby
-html = <<~HTML
-   <html>
-      <head>
-         <base href="https://www.example.com/">
-      </head>
-      <body>
-         Relative links get <a href="/contact">expanded</a> using the head's base tag. 
-      </body>
-   </html>
-HTML
+```html
 
-Ghostwriter::Writer.new(html).textify
+<html>
+<head>
+   <base href="https://www.example.com">
+</head>
+<body>
+Use the base tag to <a href="/contact">expand</a> links.
+</body>
+</html>
 ```
 
-Produces:
+Becomes:
 
 ```
-Relative links get expanded (https://www.example.com//contact) using the head's base tag.
+Use the base tag to expand (https://www.example.com/contact) links
 ```
 
 Or you can use the `link_base` parameter:
 
 ```ruby
-html = '<html><body>Relative links get <a href="/contact">expanded</a></body></html> using the link_base parmeter, too.'
-
 Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
-```
-
-Produces:
-
-```
-"Relative links get expanded (tenjin.ca/contact) using the link_base parmeter, too."
 ```
 
 ### Images
-Images with alt text are converted:
-```ruby
-html = <<~HTML
-   <img src="logo.jpg" alt="ACME Anvils">
-HTML
 
-Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
+Images with alt text are converted:
+
+```html
+<img src="logo.jpg" alt="ACME Anvils" />
 ```
 
-Produces:
+Becomes:
 
 ```
 ACME Anvils (logo.jpg)
 ```
 
 But images lacking alt text or with a presentation ARIA role are ignored:
-```ruby
-html = <<~HTML
-   <img src="decoration.jpg">
-   <img src="logo.jpg" role="presentation">
-HTML
 
-# this will produce an empty string
-Ghostwriter::Writer.new(html).textify(link_base: 'tenjin.ca')
+```html
+<!-- these will just become an empty string -->
+<img src="decoration.jpg">
+<img src="logo.jpg" role="presentation">
 ```
 
 ### Lists
 
-Lists are converted, too. They get padded with newlines and are given simple markers:
+Lists are converted, too. They are padded with newlines and are given simple markers:
 
-```ruby
-html = <<~HTML
-    <ul>
-        <li>Planes</li>
-        <li>Trains</li>
-        <li>Automobiles</li>
-    </ul>
-    <ol>
-        <li>I get knocked down</li>
-        <li>I get up again</li>
-        <li>Never gonna keep me down</li>
-    </ol>
-HTML
+```html
 
-Ghostwriter::Writer.new(html).textify
+<ul>
+   <li>Planes</li>
+   <li>Trains</li>
+   <li>Automobiles</li>
+</ul>
+<ol>
+   <li>I get knocked down</li>
+   <li>I get up again</li>
+   <li>Never gonna keep me down</li>
+</ol>
 ```
 
-Produces:
+Becomes:
 
 ```
 
@@ -164,47 +150,38 @@ Produces:
 
 ### Tables
 
-Tables are often used email structuring because support for more modern CSS is inconsistent.
+Tables are still often used in email structuring because support for more modern HTML and CSS is inconsistent.
+If your table is purely presentational, mark it with `role="presentation"`. See below for details.
 
-Ghostwriter tries to maintain table structure, but this will quickly devolve for complex structures.
+For real data tables, Ghostwriter tries to maintain table structure for simple tables:
 
-```ruby
-html = <<~HTML
-   <html>
-      <head>
-         <base href="https://www.example.com/">
-      </head>
-      <body>
-         <table>
-            <thead>
-                <tr>
-                    <th>Ship</th>
-                    <th>Captain</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Enterprise</td>
-                    <td>Jean-Luc Picard</td>
-                </tr>
-                <tr>
-                    <td>TARDIS</td>
-                    <td>The Doctor</td>
-                </tr>
-                <tr>
-                    <td>Planet Express Ship</td>
-                    <td>Turanga Leela</td>
-                </tr>
-            </tbody>
-         </table> 
-      </body>
-   </html>
-HTML
+```html
 
-Ghostwriter::Writer.new(html).textify
+<table>
+   <thead>
+   <tr>
+      <th>Ship</th>
+      <th>Captain</th>
+   </tr>
+   </thead>
+   <tbody>
+   <tr>
+      <td>Enterprise</td>
+      <td>Jean-Luc Picard</td>
+   </tr>
+   <tr>
+      <td>TARDIS</td>
+      <td>The Doctor</td>
+   </tr>
+   <tr>
+      <td>Planet Express Ship</td>
+      <td>Turanga Leela</td>
+   </tr>
+   </tbody>
+</table>
 ```
 
-Produces:
+Becomes:
 
 ```
 | Ship                | Captain         |
@@ -212,6 +189,22 @@ Produces:
 | Enterprise          | Jean-Luc Picard |
 | TARDIS              | The Doctor      |
 | Planet Express Ship | Turanga Leela   |
+```
+
+### Presentation ARIA Role
+Lists and tables with `role="presentation"` will be treated as a simple container 
+and the normal behaviour will be suppressed.
+
+```html
+<table role="presentation"><tr><td>The table is a lie</td></tr></table>
+<ul role="presentation"><li>No such list</li></ul>
+```
+
+Becomes:
+
+```
+The table is a lie
+No such list
 ```
 
 ### Mail Gem Example
