@@ -149,8 +149,6 @@ describe Ghostwriter::Writer do
          expect(Ghostwriter::Writer.new(html).textify).to eq "I am a paragraph\n\n"
       end
 
-      # TODO: it should handle tables in a clean way.
-
       it 'should strip each line after processing' do
          html = "<div>  \n  <p>Some text</p><p>  \n  more text  \n  </p>  </div>"
 
@@ -216,10 +214,10 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
-            HTML
+            TEXT
          end
 
          it 'should underline header rows' do
@@ -234,11 +232,11 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
                |------------|-----------------|
 
-            HTML
+            TEXT
          end
 
          it 'should assume tbody if not specified' do
@@ -251,10 +249,10 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
-            HTML
+            TEXT
          end
 
          it 'should add newline after table' do
@@ -273,12 +271,12 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
                | TARDIS | The Doctor |
 
-            HTML
+            TEXT
          end
 
          it 'should match column sizes' do
@@ -299,12 +297,12 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Enterprise          | Jean-Luc Picard |
                | TARDIS              | The Doctor      |
                | Planet Express Ship | Turanga Leela   |
 
-            HTML
+            TEXT
          end
 
          it 'should match column sizes per table' do
@@ -348,7 +346,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Ship       | Captain         |
                |------------|-----------------|
                | Enterprise | Jean-Luc Picard |
@@ -359,7 +357,7 @@ describe Ghostwriter::Writer do
                | TARDIS              | The Doctor    |
                | Planet Express Ship | Turanga Leela |
 
-            HTML
+            TEXT
          end
 
          it 'should parse fully defined tables' do
@@ -388,14 +386,14 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                | Ship                | Captain         |
                |---------------------|-----------------|
                | Enterprise          | Jean-Luc Picard |
                | TARDIS              | The Doctor      |
                | Planet Express Ship | Turanga Leela   |
 
-            HTML
+            TEXT
          end
       end
 
@@ -428,10 +426,10 @@ describe Ghostwriter::Writer do
                <table role=presentation><tr><td>No quotes</td></tr></table>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                With quotes
                No quotes
-            HTML
+            TEXT
          end
 
          it 'should treat list with presentation role as paragraphs' do
@@ -443,12 +441,12 @@ describe Ghostwriter::Writer do
                <ul role=presentation><li>Unordered without quotes</li></ul>
             HTML
 
-            expect(Ghostwriter::Writer.new(html).textify).to eq <<~HTML
+            expect(Ghostwriter::Writer.new(html).textify).to eq <<~TEXT
                Ordered with quotes
                Ordered without quotes
                Unordered with quotes
                Unordered without quotes
-            HTML
+            TEXT
          end
       end
 
