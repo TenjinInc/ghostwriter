@@ -8,8 +8,8 @@ It's sort of like a reverse-markdown or a very, very simple screen reader.
 
 * Some email clients won't or can’t handle HTML at all
 * Some people explicitly choose plaintext just by preference or accessibility
-* Spam filters tend to prefer emails with a plain text alternative (but if you use this gem to spam people, I
-  will yell at you)
+* Spam filters tend to prefer emails with a plain text alternative (but if you use this gem to spam people, I will yell
+  at you)
 
 ## Installation
 
@@ -32,9 +32,26 @@ Or install it manually with:
 Create a `Ghostwriter::Writer` and call `#textify` with the html string you want modified:
 
 ```ruby
-html = '<html><body><p>This is some markup <a href="tenjin.ca">and a link</a></p><p>Other tags translate, too</p></body></html>'
+html = <<~HTML
+<html>
+<body>
+    <p>This is some text with <a href="tenjin.ca">a link</a></p>
+    <p>It handles other stuff, too.</p>
+    <hr>
+    <h1>Stuff Like</h1>
+    <ul>
+      <li>Images</li>
+      <li>Lists</li>
+      <li>Tables</li>
+      <li>And more</li>
+    </ul>
+</body>
+</html>
+HTML
 
-Ghostwriter::Writer.new.textify(html)
+ghostwriter = Ghostwriter::Writer.new
+
+puts ghostwriter.textify(html)
 ```
 
 Produces:
@@ -119,7 +136,9 @@ But images lacking alt text or with a presentation ARIA role are ignored:
 And images with data URIs won't include the data portion.
 
 ```html
-<img src="data:image/gif;base64,R0lGODdhIwAjAMZ/AAkMBxETEBUUDBoaExkaGCIcFx4fGCEfFCcfECkjHiUlHiglGikmFjAqFi8pJCsrJT8sCjMzLDUzJzs0GjkzLTszKTM1Mzg4MD48Mzs+O0tAIElCJ1NCGVdBHUtEMkNFQjlHTFJDOkdGPT1ISUxLRENOT1tMI01PTGdLKk1RU0hTVEtTT0NVVFRTTExYWE9YVGhVP1VZXGFYTWhaMFRcWHFYL1FdXV1dRHdZMVRgYFhgXFdiY11hY1tkX31hJltmZ2pnWnloLGFrbG9oYXlqN3NqTnBqWHxqRItvRIh0Nod0ToF2U5J4LX55Xm97e4B5aZqAQpGAdqOCOZKEYZ2FOJyEVoyKbqiOXpySbLCVcLCXaKWbdKCdfZyhi66dksGdc76fbbije7mkdLOmgq6ogrCpibyvirexisWvhs2vgsGyiLq1lce1lMC5ks28nsfBmcHDq9bAl9PDmMnFo9TGh8zIoM7Jm9vLs9nRo93QqtfSquLQpdXUs+fdterlw////ywAAAAAIwAjAAAH/oArOTo6PYaGOz08P0KMOTZCOzw7PzY/Pz2JPYSDhTSFPTSXPY0tIiIfJz05o5Q/O7A5moc6O4Q0oS8uQisXGCItwTItP5OxOrKjhzSfLzYvgz85ERQXJKcSIkZeJDqOl43StrSEKzo2LhkOGBISDw40JyIVFVEyorBCkZmwtCsrtnLQSJCAwoMFCiwoiECPAr0TjPrtECJwXLMVNARlUCBhQAEFC2SsgWPGDBs3d2RcorSD1SVGr3qskOkihoIH70DO0cOHDx48evD0KQONmQ0aORZJE3VLRYoPBRwoUCCCSx07eoL+xLNnj5UfNFry4BHuR6EcK0qkKJFhAYUE/g+cdHlz1efPrnvM2MjhQlYOWTxktXThIoUKhQoKDHBi5Y0dO0CD5smzJ46NvWJfjYW1w4WKEiWkKkgw9UYdPXTo8Mn6042bvX9pTHoFa5GKzykekP5owEidN1u6PKnzMw+QJ3ttUPr7qKUs0C5KHOyoAMMaNWrmjKlSRYscMFm+nBBUybkLSYsIl3DxwAgcKwWMzGnz5kqTK1e09AEDI0uGE8rJEgNfsuxVggoujGABF1xMoYAVc9RRhxxq5JGVHn3EEYcIGfT1igvGKLfDZyWMkMINa5QhQRNz9CQhT1n5URmHJ8Sygw2BSWLDbaCpgEFPNzxBV4QwApVhHBhg/vABZ0pJIhuCoI0wQhFlkLEGGWfQ9wZ2W6KRBhoUJKncKyK2tMOBPI6wwAxltInlG1uKcQUUV3xpwQUXACSJjbCAxgJoJShggBVtnmGGlm/M4UYcX14QQQQ1PpJjUjmsd5sKCg5gBRdkYMlGG2KwoUYWWYARxgXVnODXqmP9CWgJIESwxhJTbEHGGGbMsSWpaRRBQQQXpPKIiJOgg+BnI4AwwhxcHFHrGGN0KYYYaEhAzQX/7flIDMqx4CoIJY7QxhpY0GorXXXwkUcRj1Lg7gfMDavcCSx4BqsIHpyxRhtT1FCDEmNgF4YY1j6KZ4eXXTast9GVcAIHG2TZRhlT/qCAAg5IZIzCA+1QQ0EGKbgAG7c0pPOAAgQcwEQSZ2R5RhlYVIFEFVccAQEAAASgWEIrXEZYDDHQYAEBAQSAcxBUbCExGWVsMfMVCHSA89QCbHBDX4QRRsPURuMcQBBQYLHGHGuwoYUYVdQQxAIOBCCACVLUgDMBS7rwwgtENHDAAEYLMIAAHhABRRVYKFEDDjjU0AA9HiQhxQQOCDC1BXe/UAQVVATRwAIDDGCAAAd0EAQTTEgBBQ4IIFSBFHFPdYEIFJBAQOUE1K5AAyZgnsQME/jNwAG/e7QBFT4sYEABBiQv6ANDDLDCCwPULr0ADYyeOQcMLMAAAxNAIQUHJwckYEDn5CfvgAEKvECA3+R7nrwB2k+ggQkmaLB3++Sz3zkMIawQCAA7" alt="Data picture"/>
+
+<img src="data:image/gif;base64,R0lGODdhIwAjAMZ/AAkMBxETEBUUDBoaExkaGCIcFx4fGCEfFCcfECkjHiUlHiglGikmFjAqFi8pJCsrJT8sCjMzLDUzJzs0GjkzLTszKTM1Mzg4MD48Mzs+O0tAIElCJ1NCGVdBHUtEMkNFQjlHTFJDOkdGPT1ISUxLRENOT1tMI01PTGdLKk1RU0hTVEtTT0NVVFRTTExYWE9YVGhVP1VZXGFYTWhaMFRcWHFYL1FdXV1dRHdZMVRgYFhgXFdiY11hY1tkX31hJltmZ2pnWnloLGFrbG9oYXlqN3NqTnBqWHxqRItvRIh0Nod0ToF2U5J4LX55Xm97e4B5aZqAQpGAdqOCOZKEYZ2FOJyEVoyKbqiOXpySbLCVcLCXaKWbdKCdfZyhi66dksGdc76fbbije7mkdLOmgq6ogrCpibyvirexisWvhs2vgsGyiLq1lce1lMC5ks28nsfBmcHDq9bAl9PDmMnFo9TGh8zIoM7Jm9vLs9nRo93QqtfSquLQpdXUs+fdterlw////ywAAAAAIwAjAAAH/oArOTo6PYaGOz08P0KMOTZCOzw7PzY/Pz2JPYSDhTSFPTSXPY0tIiIfJz05o5Q/O7A5moc6O4Q0oS8uQisXGCItwTItP5OxOrKjhzSfLzYvgz85ERQXJKcSIkZeJDqOl43StrSEKzo2LhkOGBISDw40JyIVFVEyorBCkZmwtCsrtnLQSJCAwoMFCiwoiECPAr0TjPrtECJwXLMVNARlUCBhQAEFC2SsgWPGDBs3d2RcorSD1SVGr3qskOkihoIH70DO0cOHDx48evD0KQONmQ0aORZJE3VLRYoPBRwoUCCCSx07eoL+xLNnj5UfNFry4BHuR6EcK0qkKJFhAYUE/g+cdHlz1efPrnvM2MjhQlYOWTxktXThIoUKhQoKDHBi5Y0dO0CD5smzJ46NvWJfjYW1w4WKEiWkKkgw9UYdPXTo8Mn6042bvX9pTHoFa5GKzykekP5owEidN1u6PKnzMw+QJ3ttUPr7qKUs0C5KHOyoAMMaNWrmjKlSRYscMFm+nBBUybkLSYsIl3DxwAgcKwWMzGnz5kqTK1e09AEDI0uGE8rJEgNfsuxVggoujGABF1xMoYAVc9RRhxxq5JGVHn3EEYcIGfT1igvGKLfDZyWMkMINa5QhQRNz9CQhT1n5URmHJ8Sygw2BSWLDbaCpgEFPNzxBV4QwApVhHBhg/vABZ0pJIhuCoI0wQhFlkLEGGWfQ9wZ2W6KRBhoUJKncKyK2tMOBPI6wwAxltInlG1uKcQUUV3xpwQUXACSJjbCAxgJoJShggBVtnmGGlm/M4UYcX14QQQQ1PpJjUjmsd5sKCg5gBRdkYMlGG2KwoUYWWYARxgXVnODXqmP9CWgJIESwxhJTbEHGGGbMsSWpaRRBQQQXpPKIiJOgg+BnI4AwwhxcHFHrGGN0KYYYaEhAzQX/7flIDMqx4CoIJY7QxhpY0GorXXXwkUcRj1Lg7gfMDavcCSx4BqsIHpyxRhtT1FCDEmNgF4YY1j6KZ4eXXTast9GVcAIHG2TZRhlT/qCAAg5IZIzCA+1QQ0EGKbgAG7c0pPOAAgQcwEQSZ2R5RhlYVIFEFVccAQEAAASgWEIrXEZYDDHQYAEBAQSAcxBUbCExGWVsMfMVCHSA89QCbHBDX4QRRsPURuMcQBBQYLHGHGuwoYUYVdQQxAIOBCCACVLUgDMBS7rwwgtENHDAAEYLMIAAHhABRRVYKFEDDjjU0AA9HiQhxQQOCDC1BXe/UAQVVATRwAIDDGCAAAd0EAQTTEgBBQ4IIFSBFHFPdYEIFJBAQOUE1K5AAyZgnsQME/jNwAG/e7QBFT4sYEABBiQv6ANDDLDCCwPULr0ADYyeOQcMLMAAAxNAIQUHJwckYEDn5CfvgAEKvECA3+R7nrwB2k+ggQkmaLB3++Sz3zkMIawQCAA7"
+     alt="Data picture" />
 ```
 
 Becomes:
@@ -128,6 +147,44 @@ Becomes:
 Data picture (embedded)
 ```
 
+### Paragraphs and Linebreaks
+
+Paragraphs are padded with a newline at the end. Line break tags add an empty line.
+
+```html
+<p>I would like to propose a toast.</p>
+<p>This meal we enjoy together would be improved by one.</p>
+<br />
+<p>... Plug in the toaster and I'll get the bread.</p>
+```
+
+```
+I would like to propose a toast.
+
+This meal we enjoy together would be improved by one.
+
+
+... Plug in the toaster and I'll get the bread.
+
+```
+
+### Headers
+
+For now, headers are all treated the same and given a simple marker:
+
+```html
+<h1>Dog Maintenance and Repair</h1>
+<h2>Food Input Port</h2>
+<h3>Exhaust Port Considerations</h3>
+```
+
+Becomes:
+
+```
+-- Dog Maintenance and Repair --
+-- Food Input Port --
+-- Exhaust Port Considerations --
+```
 
 ### Lists
 
