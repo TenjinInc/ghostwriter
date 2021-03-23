@@ -3,12 +3,16 @@
 module Ghostwriter
    # Main Ghostwriter converter object.
    class Writer
+      attr_reader :link_base
+
       # Creates a new ghostwriter
       #
       # @param [String] link_base the url to prefix relative links with
       def initialize(link_base: '')
          @link_base   = link_base
          @list_marker = '-'
+
+         freeze
       end
 
       # Strips HTML down to plain text.

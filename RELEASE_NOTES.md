@@ -1,5 +1,19 @@
 # Release Notes
 
+## 1.1.0 (2021-03-23)
+
+### Major
+
+* none
+
+### Minor
+
+* Writer is now immutable.
+
+### Bugfixes
+
+* none
+
 ## 1.0.1 (2021-03-22)
 
 ### Major

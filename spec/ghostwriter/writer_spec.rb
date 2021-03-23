@@ -3,9 +3,29 @@
 require 'spec_helper'
 
 describe Ghostwriter::Writer do
-   let(:writer) { Ghostwriter::Writer.new }
+   describe 'initialize' do
+      # Immutability prevents accidental side-effects during operation.
+      # Also it would give a tiny performance boost if you had a lot of them,
+      # but that's unlikely for expected Ghostwriter usage.
+      it 'should make the writer immutable' do
+         expect(Ghostwriter::Writer.new).to be_frozen
+      end
+
+      it 'should provide config defaults' do
+         expect(Ghostwriter::Writer.new).to be_a Ghostwriter::Writer
+      end
+
+      it 'should accept a link_base configuration' do
+         base   = 'http://www.example.com'
+         writer = Ghostwriter::Writer.new(link_base: base)
+
+         expect(writer.link_base).to eq base
+      end
+   end
 
    describe '#textify' do
+      let(:writer) { Ghostwriter::Writer.new }
+
       let :header_tags do
          %w{h1 h2 h3 h4 h5 h6 header}
       end
