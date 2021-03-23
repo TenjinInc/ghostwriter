@@ -3,14 +3,16 @@
 module Ghostwriter
    # Main Ghostwriter converter object.
    class Writer
-      attr_reader :link_base
+      attr_reader :link_base, :ul, :ol, :table_row, :table_column, :table_corner
 
       # Creates a new ghostwriter
       #
       # @param [String] link_base the url to prefix relative links with
-      def initialize(link_base: '')
-         @link_base   = link_base
-         @list_marker = '-'
+      def initialize(link_base: '', ul_marker: '-', ol_marker: '1')
+         @link_base = link_base
+         @ul        = ul_marker
+         @ol        = ol_marker
+         @ol_marker = ol_marker
 
          freeze
       end
@@ -101,18 +103,24 @@ module Ghostwriter
       end
 
       def replace_lists(doc)
+         doc.search('ol').each do |list_node|
+            replace_list_items(list_node, @ol, after_marker: '.', increment: true)
+         end
+
+         doc.search('ul').each do |list_node|
+            replace_list_items(list_node, @ul)
+         end
+
          doc.search('ul, ol').each do |list_node|
-            list_node.search('./li').each_with_index do |list_item, i|
-               marker = if list_node.node_name == 'ol'
-                           "#{ i + 1 }."
-                        else
-                           @list_marker
-                        end
-
-               list_item.inner_html = "#{ marker } #{ list_item.inner_html }\n".squeeze(' ')
-            end
-
             list_node.replace("#{ list_node.inner_html }\n")
+         end
+      end
+
+      def replace_list_items(list_node, marker, after_marker: '', increment: false)
+         list_node.search('./li').each do |list_item|
+            list_item.replace("#{ marker }#{ after_marker } #{ list_item.inner_html }\n")
+
+            marker = marker.next if increment
          end
       end
 

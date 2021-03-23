@@ -265,10 +265,63 @@ Becomes:
 | Planet Express Ship | Turanga Leela   |
 ```
 
-### Presentation ARIA Role
+### Customizing Output
 
-Lists and tables with `role="presentation"` will be treated as a simple container and the normal behaviour will be
-suppressed.
+Ghostwriter has some constructor options to customize output.
+
+You can set the list item markers. Ordered markers can be anything that responds to `#next` (eg. any `Enumerator`)
+
+```ruby
+html = <<~HTML
+   <ol><li>Mercury</li><li>Venus</li><li>Mars</li></ol>
+   <ul><li>Teapot</li><li>Kettle</li></ul>
+HTML
+
+writer = Ghostwriter::Writer.new(ul_marker: '*', ol_marker: 'a')
+
+puts writer.textify(html)
+```
+
+Produces:
+
+```
+a. Mercury
+b. Venus
+c. Mars
+
+* Teapot
+* Kettle
+```
+
+And tables can be customized:
+
+```ruby
+writer = Ghostwriter::Writer.new(table_row:    '*',
+                                 table_column: '*',
+                                 table_corner: '+')
+
+puts writer.textify <<~HTML
+   <table>
+      <thead>
+         <tr><th>Moon</th><th>Portfolio</th></tr>
+      </thead>
+      <tbody>
+         <tr><td>Phobos</td><td>Fear & Panic</td></tr>
+         <tr><td>Deimos</td><td>Dread and Terror</td></tr>
+      </tbody>
+   </table>
+HTML
+```
+
+Produces:
+
+```
+
+```
+
+#### Presentation ARIA Role
+
+Tags with `role="presentation"` will be treated as a simple container and the normal behaviour will be suppressed.
 
 ```html
 

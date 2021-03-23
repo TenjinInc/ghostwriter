@@ -15,11 +15,28 @@ describe Ghostwriter::Writer do
          expect(Ghostwriter::Writer.new).to be_a Ghostwriter::Writer
       end
 
-      it 'should accept a link_base configuration' do
-         base   = 'http://www.example.com'
-         writer = Ghostwriter::Writer.new(link_base: base)
+      it 'should set the link base configuration' do
+         %w[http://www.example.com https://example.com].each do |base|
+            writer = Ghostwriter::Writer.new(link_base: base)
 
-         expect(writer.link_base).to eq base
+            expect(writer.link_base).to eq base
+         end
+      end
+
+      it 'should set the ul marker configuration' do
+         %w[- *].each do |marker|
+            writer = Ghostwriter::Writer.new(ul_marker: marker)
+
+            expect(writer.ul).to eq marker
+         end
+      end
+
+      it 'should set the ol marker configuration' do
+         %w[a 1].each do |marker|
+            writer = Ghostwriter::Writer.new(ol_marker: marker)
+
+            expect(writer.ol).to eq marker
+         end
       end
    end
 
@@ -326,36 +343,119 @@ describe Ghostwriter::Writer do
             TEXT
          end
 
-         it 'should preface unordered list items with a bullet' do
+         it 'should process compact lists' do
             html = <<~HTML
-               <ul>
-                  <li>Planes</li>
-                  <li>Trains</li>
-                  <li>Automobiles</li>
-               </ul>
+                  <ul><li>Phobos</li><li>Deimos</li></ul>
+                  <ol><li>Venus</li><li>Mars</li></ol>
             HTML
 
+            writer = Ghostwriter::Writer.new
+
             expect(writer.textify(html)).to eq <<~TEXT
-               - Planes
-               - Trains
-               - Automobiles
+                  - Phobos
+                  - Deimos
+
+                  1. Venus
+                  2. Mars
             TEXT
+
          end
 
-         it 'should preface ordered list items with a number' do
-            html = <<~HTML
-               <ol>
-                  <li>I get knocked down</li>
-                  <li>I get up again</li>
-                  <li>Never gonna keep me down</li>
-               </ol>
-            HTML
+         context 'unordered' do
+            let(:html) do
+               <<~HTML
+                  <ul>
+                     <li>Planes</li>
+                     <li>Trains</li>
+                     <li>Automobiles</li>
+                  </ul>
+               HTML
+            end
 
-            expect(writer.textify(html)).to eq <<~TEXT
-               1. I get knocked down
-               2. I get up again
-               3. Never gonna keep me down
-            TEXT
+            it 'should preface ul items with a marker' do
+               expect(writer.textify(html)).to eq <<~TEXT
+                  - Planes
+                  - Trains
+                  - Automobiles
+               TEXT
+            end
+
+            it 'should use the provided marker' do
+               writer = Ghostwriter::Writer.new(ul_marker: '*')
+
+               expect(writer.textify(html)).to eq <<~TEXT
+                  * Planes
+                  * Trains
+                  * Automobiles
+               TEXT
+            end
+         end
+
+         context 'ordered' do
+            it 'should preface ul items with a marker' do
+               html = <<~HTML
+                  <ol>
+                     <li>Be kind</li>
+                  </ol>
+               HTML
+
+               expect(writer.textify(html)).to eq <<~TEXT
+                  1. Be kind
+               TEXT
+            end
+
+            it 'should increment the marker' do
+               html = <<~HTML
+                  <ol>
+                     <li>I get knocked down</li>
+                     <li>I get up again</li>
+                     <li>Never gonna keep me down</li>
+                  </ol>
+               HTML
+
+               expect(writer.textify(html)).to eq <<~TEXT
+                  1. I get knocked down
+                  2. I get up again
+                  3. Never gonna keep me down
+               TEXT
+            end
+
+            it 'should use the provided marker as basis' do
+               html = <<~HTML
+                  <ol>
+                     <li>Left foot in</li>
+                     <li>Left foot out</li>
+                  </ol>
+               HTML
+
+               writer = Ghostwriter::Writer.new(ol_marker: 'a')
+
+               expect(writer.textify(html)).to eq <<~TEXT
+                  a. Left foot in
+                  b. Left foot out
+               TEXT
+            end
+
+            it 'should reset the marker count with a new list' do
+               html = <<~HTML
+                  <ol>
+                     <li>Left foot in</li>
+                     <li>Left foot out</li>
+                  </ol>
+                  <ol>
+                     <li>Do the hokey pokey</li>
+                     <li>Turn yourself around</li>
+                  </ol>
+               HTML
+
+               expect(writer.textify(html)).to eq <<~TEXT
+                  1. Left foot in
+                  2. Left foot out
+
+                  1. Do the hokey pokey
+                  2. Turn yourself around
+               TEXT
+            end
          end
       end
 
