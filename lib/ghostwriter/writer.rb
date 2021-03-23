@@ -34,13 +34,13 @@ module Ghostwriter
          simple_replace(doc, 'br', "\n")
          simple_replace(doc, 'p', "\n\n")
 
-         doc.text.strip.split("\n").collect(&:strip).join("\n").concat("\n")
+         normalize_lines(doc)
       end
 
       private
 
-      def normalize_whitespace(html)
-         html.gsub(/\s/, ' ').squeeze(' ')
+      def normalize_lines(doc)
+         doc.text.strip.split("\n").collect(&:strip).join("\n").concat("\n")
       end
 
       def replace_anchors(doc)
