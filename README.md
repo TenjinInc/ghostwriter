@@ -211,7 +211,6 @@ Lists are converted, too. They are padded with newlines and are given simple mar
 Becomes:
 
 ```
-
 - Planes
 - Trains
 - Automobiles
@@ -219,7 +218,6 @@ Becomes:
 1. I get knocked down
 2. I get up again
 3. Never gonna keep me down
-
 ```
 
 ### Tables
@@ -296,8 +294,8 @@ c. Mars
 And tables can be customized:
 
 ```ruby
-writer = Ghostwriter::Writer.new(table_row:    '*',
-                                 table_column: '*',
+writer = Ghostwriter::Writer.new(table_row:    '.',
+                                 table_column: '#',
                                  table_corner: '+')
 
 puts writer.textify <<~HTML
@@ -316,6 +314,10 @@ HTML
 Produces:
 
 ```
+# Moon   # Portfolio        #
++........+..................+
+# Phobos # Fear & Panic     #
+# Deimos # Dread and Terror #
 
 ```
 

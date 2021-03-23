@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 describe Ghostwriter::Writer do
-   describe 'initialize' do
+   describe '#initialize' do
       # Immutability prevents accidental side-effects during operation.
       # Also it would give a tiny performance boost if you had a lot of them,
       # but that's unlikely for expected Ghostwriter usage.
@@ -27,7 +27,7 @@ describe Ghostwriter::Writer do
          %w[- *].each do |marker|
             writer = Ghostwriter::Writer.new(ul_marker: marker)
 
-            expect(writer.ul).to eq marker
+            expect(writer.ul_marker).to eq marker
          end
       end
 
@@ -35,7 +35,31 @@ describe Ghostwriter::Writer do
          %w[a 1].each do |marker|
             writer = Ghostwriter::Writer.new(ol_marker: marker)
 
-            expect(writer.ol).to eq marker
+            expect(writer.ol_marker).to eq marker
+         end
+      end
+
+      it 'should set the table column marker configuration' do
+         %w[+ #].each do |marker|
+            writer = Ghostwriter::Writer.new(table_column: marker)
+
+            expect(writer.table_column).to eq marker
+         end
+      end
+
+      it 'should set the table row marker configuration' do
+         %w[. x].each do |marker|
+            writer = Ghostwriter::Writer.new(table_row: marker)
+
+            expect(writer.table_row).to eq marker
+         end
+      end
+
+      it 'should set the table corner marker configuration' do
+         %w[# +].each do |marker|
+            writer = Ghostwriter::Writer.new(table_corner: marker)
+
+            expect(writer.table_corner).to eq marker
          end
       end
    end
@@ -345,18 +369,18 @@ describe Ghostwriter::Writer do
 
          it 'should process compact lists' do
             html = <<~HTML
-                  <ul><li>Phobos</li><li>Deimos</li></ul>
-                  <ol><li>Venus</li><li>Mars</li></ol>
+               <ul><li>Phobos</li><li>Deimos</li></ul>
+               <ol><li>Venus</li><li>Mars</li></ol>
             HTML
 
             writer = Ghostwriter::Writer.new
 
             expect(writer.textify(html)).to eq <<~TEXT
-                  - Phobos
-                  - Deimos
+               - Phobos
+               - Deimos
 
-                  1. Venus
-                  2. Mars
+               1. Venus
+               2. Mars
             TEXT
 
          end
@@ -460,7 +484,7 @@ describe Ghostwriter::Writer do
       end
 
       context 'tables' do
-         it 'should bracket th and td with pipes' do
+         it 'should bracket th and td with column markers' do
             html = <<~HTML
                <table>
                   <tbody>
@@ -474,6 +498,25 @@ describe Ghostwriter::Writer do
 
             expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
+            TEXT
+         end
+
+         it 'should use given column markers' do
+            html = <<~HTML
+               <table>
+                  <tbody>
+                     <tr>
+                        <th>Enterprise</th>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                  </tbody>
+               </table>
+            HTML
+
+            writer = Ghostwriter::Writer.new(table_column: '#')
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               # Enterprise # Jean-Luc Picard #
             TEXT
          end
 
@@ -495,6 +538,46 @@ describe Ghostwriter::Writer do
             TEXT
          end
 
+         it 'should use the given header underline' do
+            html = <<~HTML
+               <table>
+                  <thead>
+                     <tr>
+                        <th>Enterprise</th>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                  </thead>
+               </table>
+            HTML
+
+            writer = Ghostwriter::Writer.new(table_row: 'x')
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               | Enterprise | Jean-Luc Picard |
+               |xxxxxxxxxxxx|xxxxxxxxxxxxxxxxx|
+            TEXT
+         end
+
+         it 'should use the given table corners' do
+            html = <<~HTML
+               <table>
+                  <thead>
+                     <tr>
+                        <th>Enterprise</th>
+                        <td>Jean-Luc Picard</td>
+                     </tr>
+                  </thead>
+               </table>
+            HTML
+
+            writer = Ghostwriter::Writer.new(table_corner: '+')
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               | Enterprise | Jean-Luc Picard |
+               +------------+-----------------+
+            TEXT
+         end
+
          it 'should assume tbody if not specified' do
             html = <<~HTML
                <table>
@@ -510,7 +593,19 @@ describe Ghostwriter::Writer do
             TEXT
          end
 
-         it 'should add newline after table' do
+         it 'should process compact tables' do
+            html = <<~HTML
+               <table><thead><tr><th>Ship</th><th>Captain</th></tr></thead><tbody><tr><td>Enterprise</td><td>Jean-Luc Picard</td></tr></tbody></table>
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               | Ship       | Captain         |
+               |------------|-----------------|
+               | Enterprise | Jean-Luc Picard |
+            TEXT
+         end
+
+         it 'should pad bottom of table with blank line' do
             html = <<~HTML
                <table>
                   <tr>
@@ -518,18 +613,13 @@ describe Ghostwriter::Writer do
                      <td>Jean-Luc Picard</td>
                   </tr>
                </table>
-               <table>
-                  <tr>
-                     <td>TARDIS</td>
-                     <td>The Doctor</td>
-                  </tr>
-               </table>
+               Words
             HTML
 
             expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
-               | TARDIS | The Doctor |
+               Words
             TEXT
          end
 
@@ -558,6 +648,27 @@ describe Ghostwriter::Writer do
             TEXT
          end
 
+         it 'should translate entities when calculating column width' do
+            html = <<~HTML
+               <table>
+                  <thead>
+                     <tr><th>Colour</th></tr>
+                  </thead>
+                  <tbody>
+                     <tr><td>Green & Red</td></tr>
+                     <tr><td>Blue</td></tr>
+                  </tbody>
+               </table>
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               | Colour      |
+               |-------------|
+               | Green & Red |
+               | Blue        |
+            TEXT
+         end
+
          it 'should match column sizes per table' do
             html = <<~HTML
                <table>
@@ -578,7 +689,7 @@ describe Ghostwriter::Writer do
                      </tr>
                   </tbody>
                </table>
-
+              
                <table>
                   <thead>
                      <tr>

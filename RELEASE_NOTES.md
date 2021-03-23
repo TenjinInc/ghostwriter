@@ -8,6 +8,8 @@
 
 ### Minor
 
+* Added customization for list markers
+* Added customization for table markers
 * Writer is now immutable.
 
 ### Bugfixes

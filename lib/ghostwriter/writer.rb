@@ -3,16 +3,19 @@
 module Ghostwriter
    # Main Ghostwriter converter object.
    class Writer
-      attr_reader :link_base, :ul, :ol, :table_row, :table_column, :table_corner
+      attr_reader :link_base, :ul_marker, :ol_marker, :table_row, :table_column, :table_corner
 
       # Creates a new ghostwriter
       #
       # @param [String] link_base the url to prefix relative links with
-      def initialize(link_base: '', ul_marker: '-', ol_marker: '1')
-         @link_base = link_base
-         @ul        = ul_marker
-         @ol        = ol_marker
-         @ol_marker = ol_marker
+      def initialize(link_base: '', ul_marker: '-', ol_marker: '1',
+                     table_column: '|', table_row: '-', table_corner: '|')
+         @link_base    = link_base
+         @ul_marker    = ul_marker
+         @ol_marker    = ol_marker
+         @table_column = table_column
+         @table_row    = table_row
+         @table_corner = table_corner
 
          freeze
       end
@@ -104,11 +107,11 @@ module Ghostwriter
 
       def replace_lists(doc)
          doc.search('ol').each do |list_node|
-            replace_list_items(list_node, @ol, after_marker: '.', increment: true)
+            replace_list_items(list_node, @ol_marker, after_marker: '.', increment: true)
          end
 
          doc.search('ul').each do |list_node|
-            replace_list_items(list_node, @ul)
+            replace_list_items(list_node, @ul_marker)
          end
 
          doc.search('ul, ol').each do |list_node|
@@ -126,24 +129,27 @@ module Ghostwriter
 
       def replace_tables(doc)
          doc.css('table').each do |table|
+            # remove whitespace between nodes
+            table.search('//text()[normalize-space()=""]').remove
+
             column_sizes = calculate_column_sizes(table)
 
             table.search('./thead/tr', './tbody/tr', './tr').each do |row|
                replace_table_nodes(row, column_sizes)
 
-               row.inner_html = "#{ row.inner_html }|\n"
+               row.replace("#{ row.inner_html }#{ @table_column }\n")
             end
 
             add_table_header_underline(table, column_sizes)
 
-            table.inner_html = "#{ table.inner_html }\n"
+            table.replace("\n#{ table.inner_html }\n")
          end
       end
 
       def calculate_column_sizes(table)
          column_sizes = table.search('tr').collect do |row|
             row.search('th', 'td').collect do |node|
-               node.inner_html.length
+               node.text.length
             end
          end
 
@@ -151,19 +157,19 @@ module Ghostwriter
       end
 
       def add_table_header_underline(table, column_sizes)
-         table.search('./thead').each do |row|
-            header_bottom = "|#{ column_sizes.collect { |len| ('-' * (len + 2)) }.join('|') }|"
+         table.search('./thead').each do |thead|
+            lines         = column_sizes.collect { |len| @table_row * (len + 2) }
+            underline_row = "#{ table_corner }#{ lines.join(@table_corner) }#{ @table_corner }"
 
-            row.inner_html = "#{ row.inner_html }#{ header_bottom }\n"
+            thead.replace("#{ thead.inner_html }#{ underline_row }\n")
          end
       end
 
       def replace_table_nodes(row, column_sizes)
          row.search('th', 'td').each_with_index do |node, i|
-            new_content = "| #{ node.inner_html }".squeeze(' ')
+            new_content = node.text.ljust(column_sizes[i] + 1)
 
-            # +2 for the extra spacing between text and pipe
-            node.inner_html = new_content.ljust(column_sizes[i] + 2)
+            node.replace("#{ @table_column } #{ new_content }")
          end
       end
 
