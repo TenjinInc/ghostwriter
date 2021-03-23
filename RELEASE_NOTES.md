@@ -8,9 +8,11 @@
 
 ### Minor
 
+* Added customization for headings
+* Headings now marked more for higher order headings
 * Added customization for list markers
 * Added customization for table markers
-* Writer is now immutable.
+* Writer is now immutable
 
 ### Bugfixes
 

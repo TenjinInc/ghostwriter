@@ -172,9 +172,9 @@ This meal we enjoy together would be improved by one.
 
 ```
 
-### Headers
+### Headings
 
-For now, headers are all treated the same and given a simple marker:
+Headings are wrapped with a marker per heading level:
 
 ```html
 <h1>Dog Maintenance and Repair</h1>
@@ -186,9 +186,11 @@ Becomes:
 
 ```
 -- Dog Maintenance and Repair --
--- Food Input Port --
--- Exhaust Port Considerations --
+---- Food Input Port ----
+------ Exhaust Port Considerations ------
 ```
+
+The `<header>` tag is treated like an `<h1>` tag.
 
 ### Lists
 
@@ -267,7 +269,25 @@ Becomes:
 
 Ghostwriter has some constructor options to customize output.
 
-You can set the list item markers. Ordered markers can be anything that responds to `#next` (eg. any `Enumerator`)
+You can set heading markers.
+
+```ruby
+html = <<~HTML
+   <h1>Emergency Cat Procedures</h1>
+HTML
+
+writer = Ghostwriter::Writer.new(heading_marker: '#')
+
+puts writer.textify(html)
+```
+
+Produces:
+
+```
+# Emergency Cat Procedures #
+```
+
+You can also set list item markers. Ordered markers can be anything that responds to `#next` (eg. any `Enumerator`)
 
 ```ruby
 html = <<~HTML

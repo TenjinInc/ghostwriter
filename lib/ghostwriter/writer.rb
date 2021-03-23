@@ -3,19 +3,20 @@
 module Ghostwriter
    # Main Ghostwriter converter object.
    class Writer
-      attr_reader :link_base, :ul_marker, :ol_marker, :table_row, :table_column, :table_corner
+      attr_reader :link_base, :heading_marker, :ul_marker, :ol_marker, :table_row, :table_column, :table_corner
 
       # Creates a new ghostwriter
       #
       # @param [String] link_base the url to prefix relative links with
-      def initialize(link_base: '', ul_marker: '-', ol_marker: '1',
+      def initialize(link_base: '', heading_marker: '--', ul_marker: '-', ol_marker: '1',
                      table_column: '|', table_row: '-', table_corner: '|')
-         @link_base    = link_base
-         @ul_marker    = ul_marker
-         @ol_marker    = ol_marker
-         @table_column = table_column
-         @table_row    = table_row
-         @table_corner = table_corner
+         @link_base      = link_base
+         @heading_marker = heading_marker
+         @ul_marker      = ul_marker
+         @ol_marker      = ol_marker
+         @table_column   = table_column
+         @table_row      = table_row
+         @table_corner   = table_corner
 
          freeze
       end
@@ -87,8 +88,16 @@ module Ghostwriter
       end
 
       def replace_headers(doc)
-         doc.search('header, h1, h2, h3, h4, h5, h6').each do |node|
-            node.inner_html = "-- #{ node.inner_html } --\n".squeeze(' ')
+         doc.search('header, h1').each do |node|
+            node.replace("#{ @heading_marker } #{ node.inner_html } #{ @heading_marker }\n"
+                               .squeeze(' '))
+         end
+
+         (2..6).each do |n|
+            doc.search("h#{ n }").each do |node|
+               node.replace("#{ @heading_marker * n } #{ node.inner_html } #{ @heading_marker * n }\n"
+                                  .squeeze(' '))
+            end
          end
       end
 

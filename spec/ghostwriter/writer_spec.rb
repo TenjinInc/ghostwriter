@@ -23,6 +23,14 @@ describe Ghostwriter::Writer do
          end
       end
 
+      it 'should set the header marker configuration' do
+         %w[# =].each do |marker|
+            writer = Ghostwriter::Writer.new(heading_marker: marker)
+
+            expect(writer.heading_marker).to eq marker
+         end
+      end
+
       it 'should set the ul marker configuration' do
          %w[- *].each do |marker|
             writer = Ghostwriter::Writer.new(ul_marker: marker)
@@ -66,10 +74,6 @@ describe Ghostwriter::Writer do
 
    describe '#textify' do
       let(:writer) { Ghostwriter::Writer.new }
-
-      let :header_tags do
-         %w{h1 h2 h3 h4 h5 h6 header}
-      end
 
       it 'should always end output with a newline for clean concatenation' do
          html = ''
@@ -267,21 +271,53 @@ describe Ghostwriter::Writer do
 
       context 'headers' do
          it 'should add a newline after headers' do
-            header_tags.each do |tag|
+            %w{h1 h2 h3 h4 h5 h6 header}.each do |tag|
                html = "<#{tag}>A header</#{tag}>"
 
                expect(writer.textify(html)).to end_with "\n"
             end
          end
 
-         it 'should decorate headers' do
-            header_tags.each do |tag|
-               html = "<#{tag}>  A header  </#{tag}>"
+         it 'should compress header whitespace' do
+            html = "<h1>  A header  </h1>"
 
-               expect(writer.textify(html)).to eq <<~TEXT
-                  -- A header --
-               TEXT
-            end
+            expect(writer.textify(html)).to eq <<~TEXT
+               -- A header --
+            TEXT
+         end
+
+         it 'should decorate headers' do
+            html = "<h1>A header</h1>"
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               -- A header --
+            TEXT
+         end
+
+         it 'should add markers for higher numbers' do
+            html = "<h1>A header</h1>"
+            expect(writer.textify(html)).to eq "-- A header --\n"
+
+            html = "<h2>A header</h2>"
+            expect(writer.textify(html)).to eq "---- A header ----\n"
+
+            html = "<h3>A header</h3>"
+            expect(writer.textify(html)).to eq "------ A header ------\n"
+         end
+
+         it 'should treat header as h1' do
+            html = "<header>A header</header>"
+            expect(writer.textify(html)).to eq "-- A header --\n"
+         end
+
+         it 'should decorate headers using the given marker' do
+            html = "<h2>A header</h2>"
+
+            writer = Ghostwriter::Writer.new(heading_marker: '#')
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               ## A header ##
+            TEXT
          end
       end
 
