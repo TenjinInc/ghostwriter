@@ -1,5 +1,19 @@
 # Release Notes
 
+## 1.0.1 (2021-03-22)
+
+### Major
+
+* none
+
+### Minor
+
+* Updated README
+
+### Bugfixes
+
+* Fixed hr padding behaviour
+
 ## 1.0.0 (2021-03-21)
 
 ### Major

@@ -17,7 +17,7 @@ module Ghostwriter
       #
       # @return converted text
       def textify(html)
-         doc = Nokogiri::HTML(normalize_whitespace(html).gsub('</p>', "</p>\n\n"))
+         doc = Nokogiri::HTML(html.gsub(/\s+/, ' '))
 
          doc.search('style, script').remove
 
@@ -30,15 +30,11 @@ module Ghostwriter
          replace_lists(doc)
          replace_tables(doc)
 
-         simple_replace(doc, 'hr', "\n----------\n")
+         simple_replace(doc, 'hr', "\n----------\n\n")
          simple_replace(doc, 'br', "\n")
+         simple_replace(doc, 'p', "\n\n")
 
-         # doc.search('p').each do |link_node|
-         #   link_node.inner_html = link_node.inner_html + "\n\n"
-         # end
-
-         # trim, but only single-space character
-         doc.text.gsub(/^ +| +$/, '')
+         doc.text.strip.split("\n").collect(&:strip).join("\n").concat("\n")
       end
 
       private
@@ -112,7 +108,7 @@ module Ghostwriter
                list_item.inner_html = "#{ marker } #{ list_item.inner_html }\n".squeeze(' ')
             end
 
-            list_node.replace("\n#{ list_node.inner_html }\n")
+            list_node.replace("#{ list_node.inner_html }\n")
          end
       end
 

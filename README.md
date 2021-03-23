@@ -33,20 +33,20 @@ Create a `Ghostwriter::Writer` and call `#textify` with the html string you want
 
 ```ruby
 html = <<~HTML
-<html>
-<body>
-    <p>This is some text with <a href="tenjin.ca">a link</a></p>
-    <p>It handles other stuff, too.</p>
-    <hr>
-    <h1>Stuff Like</h1>
-    <ul>
-      <li>Images</li>
-      <li>Lists</li>
-      <li>Tables</li>
-      <li>And more</li>
-    </ul>
-</body>
-</html>
+    <html>
+    <body>
+        <p>This is some text with <a href="tenjin.ca">a link</a></p>
+        <p>It handles other stuff, too.</p>
+        <hr>
+        <h1>Stuff Like</h1>
+        <ul>
+          <li>Images</li>
+          <li>Lists</li>
+          <li>Tables</li>
+          <li>And more</li>
+        </ul>
+    </body>
+    </html>
 HTML
 
 ghostwriter = Ghostwriter::Writer.new
@@ -57,9 +57,18 @@ puts ghostwriter.textify(html)
 Produces:
 
 ```
-This is some markup and a link (tenjin.ca)
+This is some text with a link (tenjin.ca)
 
-Other tags translate, too
+It handles other stuff, too.
+
+
+----------
+
+-- Stuff Like --
+- Images
+- Lists
+- Tables
+- And more
 ```
 
 ### Links
@@ -67,12 +76,7 @@ Other tags translate, too
 Links are converted to the link text followed by the link target in brackets:
 
 ```html
-
-<html>
-<body>
 Visit our <a href="https://example.com">Website</a>
-<body>
-</html>
 ```
 
 Becomes:
@@ -102,7 +106,7 @@ Use the base tag to <a href="/contact">expand</a> links.
 Becomes:
 
 ```
-Use the base tag to expand (https://www.example.com/contact) links
+Use the base tag to expand (https://www.example.com/contact) links.
 ```
 
 Or you can use the `link_base` configuration:

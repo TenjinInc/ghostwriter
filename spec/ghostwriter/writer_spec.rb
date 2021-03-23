@@ -3,28 +3,117 @@
 require 'spec_helper'
 
 describe Ghostwriter::Writer do
+   let(:writer) { Ghostwriter::Writer.new }
+
    describe '#textify' do
       let :header_tags do
          %w{h1 h2 h3 h4 h5 h6 header}
       end
 
-      it 'should replace hr with a line of dashes' do
-         html = '<hr>'
+      it 'should always end output with a newline for clean concatenation' do
+         html = ''
 
-         expect(Ghostwriter::Writer.new.textify(html)).to eq "\n----------\n"
+         expect(writer.textify(html)).to eq "\n"
+      end
+
+      it 'should compress whitespace to one space' do
+         html = "\n\nThis   is\treally\nspaced\ttext"
+
+         expect(writer.textify(html)).to eq <<~TEXT
+            This is really spaced text
+         TEXT
+      end
+
+      it 'should replace all <br> tags with a newline' do
+         html = 'Line one<br>Line two'
+
+         expect(writer.textify(html)).to eq <<~TEXT
+            Line one
+            Line two
+         TEXT
+      end
+
+      it 'should whitespace strip each line after processing' do
+         html = "<div>  \n  <p>Some text</p><p>  \n  more text  \n  </p>  </div>"
+
+         expect(writer.textify(html)).to eq <<~TEXT
+            Some text
+
+            more text
+         TEXT
+      end
+
+      context 'paragraphs' do
+         it 'should pad paragraph endings with a newline' do
+            html = '<p>I am a paragraph</p><p>Another one</p>'
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               I am a paragraph
+
+               Another one
+            TEXT
+         end
+
+         it 'should consider raw text paragraphs' do
+            html = <<~HTML
+               I am a paragraph
+               <p>Another one</p>
+               And a third
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               I am a paragraph
+
+               Another one
+
+               And a third
+            TEXT
+         end
+      end
+
+      context 'horizontal rule' do
+         it 'should replace hr with a line of dashes' do
+            expect(writer.textify('<hr>')).to eq <<~TEXT
+               ----------
+            TEXT
+         end
+
+         it 'should pad hr with a blank line before it' do
+            html = <<~HTML
+               <h1>Words</h1><hr>
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               -- Words --
+
+               ----------
+            TEXT
+         end
+
+         it 'should pad hr with a blank line after it' do
+            html = <<~HTML
+               <hr>Words
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               ----------
+
+               Words
+            TEXT
+         end
       end
 
       context 'links' do
          it 'should make links visible within brackets' do
             html = '<a href="www.example.com">A link</a>'
 
-            expect(Ghostwriter::Writer.new.textify(html)).to include 'A link (www.example.com)'
+            expect(writer.textify(html)).to include 'A link (www.example.com)'
          end
 
          it 'should make links absolute addresses using base tag' do
             html = '<head><base href="www.example.com" /></head><body><a href="/relative/path">A link</a></body>'
 
-            expect(Ghostwriter::Writer.new.textify(html)).to include 'A link (www.example.com/relative/path)'
+            expect(writer.textify(html)).to include 'A link (www.example.com/relative/path)'
          end
 
          it 'should make links absolute addresses using given base' do
@@ -40,74 +129,78 @@ describe Ghostwriter::Writer do
 
             html = '<head><base href="www.example2.com" /></head><body><a href="http://www.example.com/absolute/path">A link</a></body>'
 
-            expect(Ghostwriter::Writer.new.textify(html)).to include 'A link (http://www.example.com/absolute/path)'
+            expect(writer.textify(html)).to include 'A link (http://www.example.com/absolute/path)'
          end
 
          # otherwise we get redundant "www.example.com (www.example.com)"
          it 'should only provide link target when target matches text' do
-            html = '<a href="www.example.com">www.example.com</a>'
+            html = <<~HTML
+               <a href="www.example.com">www.example.com</a>
+            HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
+            expect(writer.textify(html)).to eq <<~TEXT
+               www.example.com
+            TEXT
          end
 
          it 'should ignore HTTP when matching target to link text' do
             html = '<a href="http://www.example.com">www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'http://www.example.com'
+            expect(writer.textify(html).chomp).to eq 'http://www.example.com'
 
             html = '<a href="www.example.com">http://www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
+            expect(writer.textify(html).chomp).to eq 'www.example.com'
 
             html = '<a href="http://www.example.com">http://www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'http://www.example.com'
+            expect(writer.textify(html).chomp).to eq 'http://www.example.com'
          end
 
          it 'should ignore HTTPS when matching target to link text' do
             html = '<a href="https://www.example.com">www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'https://www.example.com'
+            expect(writer.textify(html).chomp).to eq 'https://www.example.com'
 
             html = '<a href="www.example.com">https://www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
+            expect(writer.textify(html).chomp).to eq 'www.example.com'
 
             html = '<a href="https://www.example.com">https://www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'https://www.example.com'
+            expect(writer.textify(html).chomp).to eq 'https://www.example.com'
          end
 
          # an alternative behaviour could be to always consider them matching,
          # and use the most specific, but this will work for now.
          it 'it should consider other schemes as distinct unless fully matching' do
             html = '<a href="ftp://www.example.com/">www.example.com/</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com/ (ftp://www.example.com/)'
+            expect(writer.textify(html).chomp).to eq 'www.example.com/ (ftp://www.example.com/)'
 
             html = '<a href="www.example.com/">ftp://www.example.com/</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'ftp://www.example.com/ (www.example.com/)'
+            expect(writer.textify(html).chomp).to eq 'ftp://www.example.com/ (www.example.com/)'
 
             html = '<a href="ftp://www.example.com/">ftp://www.example.com/</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'ftp://www.example.com/'
+            expect(writer.textify(html).chomp).to eq 'ftp://www.example.com/'
          end
 
          it 'should ignore trailing slash when matching target to link text' do
             # just take the link target as canonical
             html = '<a href="www.example.com/">www.example.com</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com/'
+            expect(writer.textify(html).chomp).to eq 'www.example.com/'
 
             html = '<a href="www.example.com">www.example.com/</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com'
+            expect(writer.textify(html).chomp).to eq 'www.example.com'
 
             html = '<a href="www.example.com/">www.example.com/</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'www.example.com/'
+            expect(writer.textify(html).chomp).to eq 'www.example.com/'
          end
 
          it 'should handle mailto scheme' do
             html = '<a href="mailto: hello@example.com">Email Us</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Email Us (hello@example.com)'
+            expect(writer.textify(html).chomp).to eq 'Email Us (hello@example.com)'
          end
 
          it 'should handle tel scheme' do
             html = '<a href="tel: +17805550123">Phone Us</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Phone Us (+17805550123)'
+            expect(writer.textify(html).chomp).to eq 'Phone Us (+17805550123)'
 
             html = '<a href="tel: +1.780.555.0123">Phone Us</a>'
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Phone Us (+1.780.555.0123)'
+            expect(writer.textify(html).chomp).to eq 'Phone Us (+1.780.555.0123)'
          end
       end
 
@@ -116,7 +209,7 @@ describe Ghostwriter::Writer do
             header_tags.each do |tag|
                html = "<#{tag}>A header</#{tag}>"
 
-               expect(Ghostwriter::Writer.new.textify(html)).to end_with "\n"
+               expect(writer.textify(html)).to end_with "\n"
             end
          end
 
@@ -124,35 +217,11 @@ describe Ghostwriter::Writer do
             header_tags.each do |tag|
                html = "<#{tag}>  A header  </#{tag}>"
 
-               expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+               expect(writer.textify(html)).to eq <<~TEXT
                   -- A header --
                TEXT
             end
          end
-      end
-
-      it 'should compress whitespace to one space' do
-         html = "\n\nThis   is\treally\nspaced\ttext"
-
-         expect(Ghostwriter::Writer.new.textify(html)).to eq 'This is really spaced text'
-      end
-
-      it 'should replace all <br> tags with newlines' do
-         html = 'Line one<br>Line two'
-
-         expect(Ghostwriter::Writer.new.textify(html)).to eq "Line one\nLine two"
-      end
-
-      it 'should replace paragraph end tags with double newlines' do
-         html = '<p>I am a paragraph</p>'
-
-         expect(Ghostwriter::Writer.new.textify(html)).to eq "I am a paragraph\n\n"
-      end
-
-      it 'should strip each line after processing' do
-         html = "<div>  \n  <p>Some text</p><p>  \n  more text  \n  </p>  </div>"
-
-         expect(Ghostwriter::Writer.new.textify(html)).to eq "Some text\n\nmore text\n\n"
       end
 
       context 'image' do
@@ -161,7 +230,9 @@ describe Ghostwriter::Writer do
                <img src="acme-logo.jpg" alt="ACME Anvils" />
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'ACME Anvils (acme-logo.jpg)'
+            expect(writer.textify(html)).to eq <<~TEXT
+               ACME Anvils (acme-logo.jpg)
+            TEXT
          end
 
          it 'should skip images without alt text' do
@@ -169,7 +240,7 @@ describe Ghostwriter::Writer do
                <img src="flair.jpg" />
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to be_empty
+            expect(writer.textify(html)).to eq "\n"
          end
 
          it 'should skip images with presentation role' do
@@ -178,7 +249,7 @@ describe Ghostwriter::Writer do
                <img src="flair.jpg" alt="flair image" role="presentation" />
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to be_empty
+            expect(writer.textify(html)).to eq "\n"
          end
 
          it 'should not include link target for data URI images' do
@@ -186,17 +257,53 @@ describe Ghostwriter::Writer do
                <img src="data:image/gif;base64,R0lGODdhIwAjAMZ/AAkMBxETEBUUDBoaExkaGCIcFx4fGCEfFCcfECkjHiUlHiglGikmFjAqFi8pJCsrJT8sCjMzLDUzJzs0GjkzLTszKTM1Mzg4MD48Mzs+O0tAIElCJ1NCGVdBHUtEMkNFQjlHTFJDOkdGPT1ISUxLRENOT1tMI01PTGdLKk1RU0hTVEtTT0NVVFRTTExYWE9YVGhVP1VZXGFYTWhaMFRcWHFYL1FdXV1dRHdZMVRgYFhgXFdiY11hY1tkX31hJltmZ2pnWnloLGFrbG9oYXlqN3NqTnBqWHxqRItvRIh0Nod0ToF2U5J4LX55Xm97e4B5aZqAQpGAdqOCOZKEYZ2FOJyEVoyKbqiOXpySbLCVcLCXaKWbdKCdfZyhi66dksGdc76fbbije7mkdLOmgq6ogrCpibyvirexisWvhs2vgsGyiLq1lce1lMC5ks28nsfBmcHDq9bAl9PDmMnFo9TGh8zIoM7Jm9vLs9nRo93QqtfSquLQpdXUs+fdterlw////ywAAAAAIwAjAAAH/oArOTo6PYaGOz08P0KMOTZCOzw7PzY/Pz2JPYSDhTSFPTSXPY0tIiIfJz05o5Q/O7A5moc6O4Q0oS8uQisXGCItwTItP5OxOrKjhzSfLzYvgz85ERQXJKcSIkZeJDqOl43StrSEKzo2LhkOGBISDw40JyIVFVEyorBCkZmwtCsrtnLQSJCAwoMFCiwoiECPAr0TjPrtECJwXLMVNARlUCBhQAEFC2SsgWPGDBs3d2RcorSD1SVGr3qskOkihoIH70DO0cOHDx48evD0KQONmQ0aORZJE3VLRYoPBRwoUCCCSx07eoL+xLNnj5UfNFry4BHuR6EcK0qkKJFhAYUE/g+cdHlz1efPrnvM2MjhQlYOWTxktXThIoUKhQoKDHBi5Y0dO0CD5smzJ46NvWJfjYW1w4WKEiWkKkgw9UYdPXTo8Mn6042bvX9pTHoFa5GKzykekP5owEidN1u6PKnzMw+QJ3ttUPr7qKUs0C5KHOyoAMMaNWrmjKlSRYscMFm+nBBUybkLSYsIl3DxwAgcKwWMzGnz5kqTK1e09AEDI0uGE8rJEgNfsuxVggoujGABF1xMoYAVc9RRhxxq5JGVHn3EEYcIGfT1igvGKLfDZyWMkMINa5QhQRNz9CQhT1n5URmHJ8Sygw2BSWLDbaCpgEFPNzxBV4QwApVhHBhg/vABZ0pJIhuCoI0wQhFlkLEGGWfQ9wZ2W6KRBhoUJKncKyK2tMOBPI6wwAxltInlG1uKcQUUV3xpwQUXACSJjbCAxgJoJShggBVtnmGGlm/M4UYcX14QQQQ1PpJjUjmsd5sKCg5gBRdkYMlGG2KwoUYWWYARxgXVnODXqmP9CWgJIESwxhJTbEHGGGbMsSWpaRRBQQQXpPKIiJOgg+BnI4AwwhxcHFHrGGN0KYYYaEhAzQX/7flIDMqx4CoIJY7QxhpY0GorXXXwkUcRj1Lg7gfMDavcCSx4BqsIHpyxRhtT1FCDEmNgF4YY1j6KZ4eXXTast9GVcAIHG2TZRhlT/qCAAg5IZIzCA+1QQ0EGKbgAG7c0pPOAAgQcwEQSZ2R5RhlYVIFEFVccAQEAAASgWEIrXEZYDDHQYAEBAQSAcxBUbCExGWVsMfMVCHSA89QCbHBDX4QRRsPURuMcQBBQYLHGHGuwoYUYVdQQxAIOBCCACVLUgDMBS7rwwgtENHDAAEYLMIAAHhABRRVYKFEDDjjU0AA9HiQhxQQOCDC1BXe/UAQVVATRwAIDDGCAAAd0EAQTTEgBBQ4IIFSBFHFPdYEIFJBAQOUE1K5AAyZgnsQME/jNwAG/e7QBFT4sYEABBiQv6ANDDLDCCwPULr0ADYyeOQcMLMAAAxNAIQUHJwckYEDn5CfvgAEKvECA3+R7nrwB2k+ggQkmaLB3++Sz3zkMIawQCAA7" alt="Data image"/>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq 'Data image (embedded)'
+            expect(writer.textify(html)).to eq <<~TEXT
+               Data image (embedded)
+            TEXT
          end
       end
 
       context 'list' do
-         it 'should buffer lists with newlines' do
-            %w[ul ol].each do |tag|
-               html = "<#{ tag }></#{ tag }>"
+         it 'should pad lists with a blank line before' do
+            html = "Words<ul><li>Item</li></ul>"
 
-               expect(Ghostwriter::Writer.new.textify(html)).to eq "\n\n"
-            end
+            expect(writer.textify(html)).to eq <<~TEXT
+               Words
+
+               - Item
+            TEXT
+
+            html = "Words<ol><li>Item</li></ul>"
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               Words
+
+               1. Item
+            TEXT
+         end
+
+         it 'should pad lists with a blank line after' do
+            html = <<~HTML
+               <ul><li>Item</li></ul>
+               Words
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               - Item
+
+               Words
+            TEXT
+
+            html = <<~HTML
+               <ol><li>Item</li></ol>
+               Words
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               1. Item
+
+               Words
+            TEXT
          end
 
          it 'should preface unordered list items with a bullet' do
@@ -208,12 +315,10 @@ describe Ghostwriter::Writer do
                </ul>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
-
+            expect(writer.textify(html)).to eq <<~TEXT
                - Planes
                - Trains
                - Automobiles
-
             TEXT
          end
 
@@ -226,12 +331,10 @@ describe Ghostwriter::Writer do
                </ol>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
-
+            expect(writer.textify(html)).to eq <<~TEXT
                1. I get knocked down
                2. I get up again
                3. Never gonna keep me down
-
             TEXT
          end
       end
@@ -249,9 +352,8 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
-
             TEXT
          end
 
@@ -267,10 +369,9 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
                |------------|-----------------|
-
             TEXT
          end
 
@@ -284,9 +385,8 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
-
             TEXT
          end
 
@@ -306,11 +406,10 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise | Jean-Luc Picard |
 
                | TARDIS | The Doctor |
-
             TEXT
          end
 
@@ -332,11 +431,10 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Enterprise          | Jean-Luc Picard |
                | TARDIS              | The Doctor      |
                | Planet Express Ship | Turanga Leela   |
-
             TEXT
          end
 
@@ -381,7 +479,7 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Ship       | Captain         |
                |------------|-----------------|
                | Enterprise | Jean-Luc Picard |
@@ -391,7 +489,6 @@ describe Ghostwriter::Writer do
                |---------------------|---------------|
                | TARDIS              | The Doctor    |
                | Planet Express Ship | Turanga Leela |
-
             TEXT
          end
 
@@ -421,35 +518,34 @@ describe Ghostwriter::Writer do
                </table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                | Ship                | Captain         |
                |---------------------|-----------------|
                | Enterprise          | Jean-Luc Picard |
                | TARDIS              | The Doctor      |
                | Planet Express Ship | Turanga Leela   |
-
             TEXT
          end
       end
 
       context 'tag removal' do
-         it 'should remove style tags' do
+         it 'should entirely remove style tags' do
             html = '<style>a {color: blue;}</style>'
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq ''
+            expect(writer.textify(html)).to eq "\n"
          end
 
          it 'should remove script tags' do
             html = '<script>someJsCode()</script>'
 
-            expect(Ghostwriter::Writer.new.textify(html)).to be_empty
+            expect(writer.textify(html)).to eq "\n"
          end
 
          it 'should remove all other html elements' do
             %w{div strong b i}.each do |tag|
                html = "<#{ tag }></#{ tag }>"
 
-               expect(Ghostwriter::Writer.new.textify(html)).to be_empty
+               expect(writer.textify(html)).to eq "\n"
             end
          end
       end
@@ -461,7 +557,7 @@ describe Ghostwriter::Writer do
                <table role=presentation><tr><td>No quotes</td></tr></table>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                With quotes
                No quotes
             TEXT
@@ -476,7 +572,7 @@ describe Ghostwriter::Writer do
                <ul role=presentation><li>Unordered without quotes</li></ul>
             HTML
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq <<~TEXT
+            expect(writer.textify(html)).to eq <<~TEXT
                Ordered with quotes
                Ordered without quotes
                Unordered with quotes
@@ -491,25 +587,33 @@ describe Ghostwriter::Writer do
 
             nbsp = [160].pack('U*')
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq nbsp
+            expect(writer.textify(html)).to eq <<~TEXT
+               #{ nbsp }
+            TEXT
          end
 
          it 'should interpret symbol entities' do
             html = '<html>&lt;&gt;&amp;&quot;</html>'
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq '<>&"'
+            expect(writer.textify(html)).to eq <<~TEXT
+               <>&"
+            TEXT
          end
 
          it 'should interpret unicode hex entities' do
             html = "&#x267b;"
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq "\u267b"
+            expect(writer.textify(html)).to eq <<~TEXT
+               \u267b
+            TEXT
          end
 
          it 'should interpret unicode decimal entities' do
             html = "&#9851;"
 
-            expect(Ghostwriter::Writer.new.textify(html)).to eq "\u267b"
+            expect(writer.textify(html)).to eq <<~TEXT
+               \u267b
+            TEXT
          end
       end
    end
