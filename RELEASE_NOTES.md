@@ -1,5 +1,19 @@
 # Release Notes
 
+## 1.2.0 (2021-10-28)
+
+### Major
+
+* none
+
+### Minor
+
+* Updated Nokogiri version to resolve https://github.com/advisories/GHSA-7rrm-v45f-jp64
+
+### Bugfixes
+
+* none
+
 ## 1.1.0 (2021-03-23)
 
 ### Major
