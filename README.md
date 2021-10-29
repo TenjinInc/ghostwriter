@@ -2,14 +2,18 @@
 
 A ruby gem that converts HTML to plain text, preserving as much legibility and functionality as possible.
 
-It's sort of like a reverse-markdown or a very, very simple screen reader.
+It's sort of like a reverse-markdown or a *very* simple screen reader.
 
 ## But Why, Though?
 
-* Some email clients won't or can’t handle HTML at all
-* Some people explicitly choose plaintext just by preference or accessibility
-* Spam filters tend to prefer emails with a plain text alternative (but if you use this gem to spam people, I will yell
-  at you)
+* Some email clients won't or can’t offer HTML support.
+* Some people explicitly choose plaintext for accessibility or just plain preference.
+* Spam filters tend to prefer emails with a plain text alternative (but if you use this gem to spam people, 
+  not only might you be 
+  [breaking](https://fightspam.gc.ca)
+  [various](https://gdpr.eu/)
+  [laws](https://www.ftc.gov/tips-advice/business-center/guidance/can-spam-act-compliance-guide-business), 
+  I will also personally curse you)
 
 ## Installation
 
