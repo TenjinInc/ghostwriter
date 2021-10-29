@@ -1,6 +1,6 @@
 # Release Notes
 
-## 1.2.0 (2021-10-28)
+## 1.2.0 (2021-10-29)
 
 ### Major
 
@@ -9,6 +9,8 @@
 ### Minor
 
 * Updated Nokogiri version to resolve https://github.com/advisories/GHSA-7rrm-v45f-jp64
+* Updated Ruby version dependency to match
+* Relaxed dependency upper bounds
 
 ### Bugfixes
 
