@@ -1,5 +1,19 @@
 # Release Notes
 
+## 1.3.0 (2023-09-13)
+
+### Major
+
+* none
+
+### Minor
+
+* Increased minimum Ruby to 3.1
+
+### Bugfixes
+
+* none
+
 ## 1.2.1 (2021-10-29)
 
 ### Major
