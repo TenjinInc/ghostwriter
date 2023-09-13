@@ -181,18 +181,34 @@ describe Ghostwriter::Writer do
             expect(writer.textify(html)).to include 'A link (www.example.com/relative/path)'
          end
 
-         it 'should make links absolute addresses using given base' do
+         it 'should make links absolute addresses using base provided in constructor' do
             html = '<a href="/relative/path">A link</a>'
 
-            expect(Ghostwriter::Writer.new(link_base: 'www.example.com').textify(html)).to include 'A link (www.example.com/relative/path)'
+            writer = Ghostwriter::Writer.new(link_base: 'www.example.com')
+
+            expect(writer.textify(html)).to include 'A link (www.example.com/relative/path)'
          end
 
-         it 'should not change absolute addresses when given base' do
-            html = '<a href="http://www.example.com/absolute/path">A link</a>'
+         it 'should not change absolute addresses when given base in writer init' do
+            absolute_link_tag = '<a href="http://www.example.com/absolute/path">A link</a>'
 
-            expect(Ghostwriter::Writer.new(link_base: 'www.example2.com').textify(html)).to include 'A link (http://www.example.com/absolute/path)'
+            writer = Ghostwriter::Writer.new(link_base: 'www.example2.com')
 
-            html = '<head><base href="www.example2.com" /></head><body><a href="http://www.example.com/absolute/path">A link</a></body>'
+            expect(writer.textify(absolute_link_tag)).to include 'A link (http://www.example.com/absolute/path)'
+         end
+
+         it 'should not change absolute addresses when given base in HTML header' do
+            html = <<~HTML
+               <html lang="en">
+               <head>
+                  <base href="www.example2.com" />
+                  <title></title>
+               </head>
+               <body>
+                  <a href="http://www.example.com/absolute/path">A link</a>
+               </body>
+               </html>
+            HTML
 
             expect(writer.textify(html)).to include 'A link (http://www.example.com/absolute/path)'
          end
@@ -271,15 +287,15 @@ describe Ghostwriter::Writer do
 
       context 'headers' do
          it 'should add a newline after headers' do
-            %w{h1 h2 h3 h4 h5 h6 header}.each do |tag|
-               html = "<#{tag}>A header</#{tag}>"
+            %w[h1 h2 h3 h4 h5 h6 header].each do |tag|
+               html = "<#{ tag }>A header</#{ tag }>"
 
                expect(writer.textify(html)).to end_with "\n"
             end
          end
 
          it 'should compress header whitespace' do
-            html = "<h1>  A header  </h1>"
+            html = '<h1>  A header  </h1>'
 
             expect(writer.textify(html)).to eq <<~TEXT
                -- A header --
@@ -287,7 +303,7 @@ describe Ghostwriter::Writer do
          end
 
          it 'should decorate headers' do
-            html = "<h1>A header</h1>"
+            html = '<h1>A header</h1>'
 
             expect(writer.textify(html)).to eq <<~TEXT
                -- A header --
@@ -295,23 +311,23 @@ describe Ghostwriter::Writer do
          end
 
          it 'should add markers for higher numbers' do
-            html = "<h1>A header</h1>"
+            html = '<h1>A header</h1>'
             expect(writer.textify(html)).to eq "-- A header --\n"
 
-            html = "<h2>A header</h2>"
+            html = '<h2>A header</h2>'
             expect(writer.textify(html)).to eq "---- A header ----\n"
 
-            html = "<h3>A header</h3>"
+            html = '<h3>A header</h3>'
             expect(writer.textify(html)).to eq "------ A header ------\n"
          end
 
          it 'should treat header as h1' do
-            html = "<header>A header</header>"
+            html = '<header>A header</header>'
             expect(writer.textify(html)).to eq "-- A header --\n"
          end
 
          it 'should decorate headers using the given marker' do
-            html = "<h2>A header</h2>"
+            html = '<h2>A header</h2>'
 
             writer = Ghostwriter::Writer.new(heading_marker: '#')
 
@@ -362,7 +378,7 @@ describe Ghostwriter::Writer do
 
       context 'list' do
          it 'should pad lists with a blank line before' do
-            html = "Words<ul><li>Item</li></ul>"
+            html = 'Words<ul><li>Item</li></ul>'
 
             expect(writer.textify(html)).to eq <<~TEXT
                Words
@@ -370,7 +386,7 @@ describe Ghostwriter::Writer do
                - Item
             TEXT
 
-            html = "Words<ol><li>Item</li></ul>"
+            html = 'Words<ol><li>Item</li></ul>'
 
             expect(writer.textify(html)).to eq <<~TEXT
                Words
@@ -418,7 +434,6 @@ describe Ghostwriter::Writer do
                1. Venus
                2. Mars
             TEXT
-
          end
 
          context 'unordered' do
@@ -725,7 +740,7 @@ describe Ghostwriter::Writer do
                      </tr>
                   </tbody>
                </table>
-              
+
                <table>
                   <thead>
                      <tr>
@@ -809,7 +824,7 @@ describe Ghostwriter::Writer do
          end
 
          it 'should remove all other html elements' do
-            %w{div strong b i}.each do |tag|
+            %w[div strong b i].each do |tag|
                html = "<#{ tag }></#{ tag }>"
 
                expect(writer.textify(html)).to eq "\n"
@@ -868,7 +883,7 @@ describe Ghostwriter::Writer do
          end
 
          it 'should interpret unicode hex entities' do
-            html = "&#x267b;"
+            html = '&#x267b;'
 
             expect(writer.textify(html)).to eq <<~TEXT
                \u267b
@@ -876,7 +891,7 @@ describe Ghostwriter::Writer do
          end
 
          it 'should interpret unicode decimal entities' do
-            html = "&#9851;"
+            html = '&#9851;'
 
             expect(writer.textify(html)).to eq <<~TEXT
                \u267b

@@ -49,6 +49,12 @@ module Ghostwriter
 
       private
 
+      def simple_replace(doc, tag, replacement)
+         doc.search(tag).each do |node|
+            node.replace(node.inner_html + replacement)
+         end
+      end
+
       def normalize_lines(doc)
          doc.text.strip.split("\n").collect(&:strip).join("\n").concat("\n")
       end
@@ -114,78 +120,81 @@ module Ghostwriter
          end
       end
 
-      def replace_lists(doc)
-         doc.search('ol').each do |list_node|
-            replace_list_items(list_node, @ol_marker, after_marker: '.', increment: true)
-         end
-
-         doc.search('ul').each do |list_node|
-            replace_list_items(list_node, @ul_marker)
-         end
-
-         doc.search('ul, ol').each do |list_node|
-            list_node.replace("#{ list_node.inner_html }\n")
-         end
-      end
-
-      def replace_list_items(list_node, marker, after_marker: '', increment: false)
-         list_node.search('./li').each do |list_item|
-            list_item.replace("#{ marker }#{ after_marker } #{ list_item.inner_html }\n")
-
-            marker = marker.next if increment
-         end
-      end
-
-      def replace_tables(doc)
-         doc.css('table').each do |table|
-            # remove whitespace between nodes
-            table.search('//text()[normalize-space()=""]').remove
-
-            column_sizes = calculate_column_sizes(table)
-
-            table.search('./thead/tr', './tbody/tr', './tr').each do |row|
-               replace_table_nodes(row, column_sizes)
-
-               row.replace("#{ row.inner_html }#{ @table_column }\n")
+      # Methods for processing lists
+      module ListWriter
+         def replace_lists(doc)
+            doc.search('ol').each do |list_node|
+               replace_list_items(list_node, @ol_marker, after_marker: '.', increment: true)
             end
 
-            add_table_header_underline(table, column_sizes)
+            doc.search('ul').each do |list_node|
+               replace_list_items(list_node, @ul_marker)
+            end
 
-            table.replace("\n#{ table.inner_html }\n")
-         end
-      end
-
-      def calculate_column_sizes(table)
-         column_sizes = table.search('tr').collect do |row|
-            row.search('th', 'td').collect do |node|
-               node.text.length
+            doc.search('ul, ol').each do |list_node|
+               list_node.replace("#{ list_node.inner_html }\n")
             end
          end
 
-         column_sizes.transpose.collect(&:max)
-      end
+         def replace_list_items(list_node, marker, after_marker: '', increment: false)
+            list_node.search('./li').each do |list_item|
+               list_item.replace("#{ marker }#{ after_marker } #{ list_item.inner_html }\n")
 
-      def add_table_header_underline(table, column_sizes)
-         table.search('./thead').each do |thead|
-            lines         = column_sizes.collect { |len| @table_row * (len + 2) }
-            underline_row = "#{ table_corner }#{ lines.join(@table_corner) }#{ @table_corner }"
-
-            thead.replace("#{ thead.inner_html }#{ underline_row }\n")
+               marker = marker.next if increment
+            end
          end
       end
 
-      def replace_table_nodes(row, column_sizes)
-         row.search('th', 'td').each_with_index do |node, i|
-            new_content = node.text.ljust(column_sizes[i] + 1)
+      # Methods for processing tables
+      module TableWriter
+         def replace_tables(doc)
+            doc.css('table').each do |table|
+               # remove whitespace between nodes
+               table.search('//text()[normalize-space()=""]').remove
 
-            node.replace("#{ @table_column } #{ new_content }")
+               column_sizes = calculate_column_sizes(table)
+
+               table.search('./thead/tr', './tbody/tr', './tr').each do |row|
+                  replace_table_nodes(row, column_sizes)
+
+                  row.replace("#{ row.inner_html }#{ @table_column }\n")
+               end
+
+               add_table_header_underline(table, column_sizes)
+
+               table.replace("\n#{ table.inner_html }\n")
+            end
+         end
+
+         def calculate_column_sizes(table)
+            column_sizes = table.search('tr').collect do |row|
+               row.search('th', 'td').collect do |node|
+                  node.text.length
+               end
+            end
+
+            column_sizes.transpose.collect(&:max)
+         end
+
+         def add_table_header_underline(table, column_sizes)
+            table.search('./thead').each do |thead|
+               lines         = column_sizes.collect { |len| @table_row * (len + 2) }
+               underline_row = "#{ table_corner }#{ lines.join(@table_corner) }#{ @table_corner }"
+
+               thead.replace("#{ thead.inner_html }#{ underline_row }\n")
+            end
+         end
+
+         def replace_table_nodes(row, column_sizes)
+            row.search('th', 'td').each_with_index do |node, i|
+               new_content = node.text.ljust(column_sizes[i] + 1)
+
+               node.replace("#{ @table_column } #{ new_content }")
+            end
          end
       end
 
-      def simple_replace(doc, tag, replacement)
-         doc.search(tag).each do |node|
-            node.replace(node.inner_html + replacement)
-         end
-      end
+      include ListWriter
+      include TableWriter
    end
 end
