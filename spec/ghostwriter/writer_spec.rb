@@ -808,6 +808,40 @@ describe Ghostwriter::Writer do
                | Planet Express Ship | Turanga Leela   |
             TEXT
          end
+
+         # almost always a table used for layout (ew), and antiunirregardlessly still complex to render in ascii
+         it 'should NOT parse nested tables' do
+            html = <<~HTML
+               <table>
+                  <tbody>
+                     <tr>
+                        <td>
+                           Outer table cell
+                        </td>
+                     </tr>
+
+                     <tr>
+                        <td>
+                           <table>
+                              <tbody>
+                                 <tr>
+                                    <td>
+                                       Inner table cell
+                                    </td>
+                                 </tr>
+                              </tbody>
+                           </table>
+                        </td>
+                     </tr>
+                  </tbody>
+               </table>
+            HTML
+
+            expect(writer.textify(html)).to eq <<~TEXT
+               Outer table cell
+               Inner table cell
+            TEXT
+         end
       end
 
       context 'tag removal' do

@@ -1,5 +1,20 @@
 # Release Notes
 
+## 1.4.0 (2023-09-13)
+
+### Major
+
+* none
+
+### Minor
+
+* Support for graceful handling of nested tables
+* Increased minimum ruby to 3.3
+
+### Bugfixes
+
+* none
+
 ## 1.3.0 (2023-09-13)
 
 ### Major

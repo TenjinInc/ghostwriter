@@ -149,6 +149,9 @@ module Ghostwriter
       module TableWriter
          def replace_tables(doc)
             doc.css('table').each do |table|
+               # TODO: nokogiri chokes on table:not(table table), but support may come later https://github.com/sparklemotion/nokogiri/issues/3207
+               next unless table.css('table').empty? && table.ancestors('table').empty?
+
                # remove whitespace between nodes
                table.search('//text()[normalize-space()=""]').remove
 
@@ -163,6 +166,12 @@ module Ghostwriter
                add_table_header_underline(table, column_sizes)
 
                table.replace("\n#{ table.inner_html }\n")
+            end
+
+            doc.css('table table').each do |table|
+               table.search('tr').each do |row|
+                  row.replace("\n#{ row.inner_html }\n")
+               end
             end
          end
 
