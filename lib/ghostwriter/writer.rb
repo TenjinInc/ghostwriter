@@ -150,18 +150,14 @@ module Ghostwriter
          def replace_tables(doc)
             doc.css('table').each do |table|
                # TODO: nokogiri chokes on table:not(table table), but support may come later https://github.com/sparklemotion/nokogiri/issues/3207
-               next unless table.css('table').empty? && table.ancestors('table').empty?
+               next if complex? table
 
                # remove whitespace between nodes
                table.search('//text()[normalize-space()=""]').remove
 
                column_sizes = calculate_column_sizes(table)
 
-               table.search('./thead/tr', './tbody/tr', './tr').each do |row|
-                  replace_table_nodes(row, column_sizes)
-
-                  row.replace("#{ row.inner_html }#{ @table_column }\n")
-               end
+               fancy_rows! table, column_sizes
 
                add_table_header_underline(table, column_sizes)
 
@@ -169,9 +165,26 @@ module Ghostwriter
             end
 
             doc.css('table table').each do |table|
-               table.search('tr').each do |row|
-                  row.replace("\n#{ row.inner_html }\n")
-               end
+               simple_rows! table
+            end
+         end
+
+         # complex just means it contains a table or is itself nested
+         def complex?(table)
+            !table.css('table').empty? || !table.ancestors('table').empty?
+         end
+
+         def fancy_rows!(table, column_sizes)
+            table.search('./thead/tr', './tbody/tr', './tr').each do |row|
+               replace_table_nodes(row, column_sizes)
+
+               row.replace("#{ row.inner_html }#{ @table_column }\n")
+            end
+         end
+
+         def simple_rows!(table)
+            table.search('./thead/tr', './tbody/tr', './tr').each do |row|
+               row.replace("\n#{ row.inner_html }\n")
             end
          end
 
